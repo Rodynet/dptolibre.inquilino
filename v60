@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DptoLibre - Dashboard V60</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --brand-blue: #0055DD;
+            --brand-cyan: #00D1FF;
+            --bg-gray: #F0F2F6;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #cbd5e1;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+
+        .mobile-shell {
+            width: 100%;
+            height: 100vh;
+            max-width: 414px;
+            margin: 0 auto;
+            background: var(--bg-gray);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+        }
+
+        /* Estilo MP: Tarjetas cuadradas con mínimo redondeo */
+        .mp-card {
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #0055DD 0%, #00D1FF 100%);
+        }
+
+        .btn-action {
+            @apply flex flex-col items-center gap-2;
+        }
+        .icon-circle {
+            @apply w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0055DD] transition-all active:scale-90;
+        }
+
+        /* Animación de Éxito */
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { window.lucide && window.lucide.createIcons(); }, [name, size, className]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        function DptoLibreApp() {
+            const [view, setView] = useState('inicio'); // inicio, movimientos, perfil, exito_pago
+            const [activeRole, setActiveRole] = useState('Inquilino');
+            
+            // Mock Data
+            const [balance, setBalance] = useState(405430);
+            const [blindedMonths, setBlindedMonths] = useState(2);
+            const rentAmount = 450000;
+            const yieldGained = 12450;
+
+            // --- VISTA: INICIO ---
+            const InicioView = () => (
+                <div className="flex flex-col h-full animate-in fade-in duration-300">
+                    <header className="bg-[#0055DD] px-5 pt-12 pb-4 flex justify-between items-center text-white">
+                        <div onClick={() => setView('perfil')} className="flex items-center gap-3 cursor-pointer">
+                            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-white/10">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos&backgroundColor=b6e3f4" alt="Perfil" />
+                            </div>
+                            <div className="flex flex-col">
+                                <p className="text-sm font-bold leading-none">Hola, Marcos <Icon name="chevron-right" size={14} className="inline opacity-60"/></p>
+                                <div className="flex items-center gap-1 mt-1 opacity-80">
+                                    <Icon name="sparkles" size={10} className="text-yellow-300" />
+                                    <span className="text-[10px] font-medium tracking-tight">4.500 Millas • Nivel Platinum</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => alert("Score Compartido")} className="bg-white/10 p-2 rounded-lg border border-white/20"><Icon name="share-2" size={18} /></button>
+                            <Icon name="bell" size={24} />
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
+                        {/* 1. SECCIÓN SALDO (STRICT MP STYLE) */}
+                        <div className="bg-[#0055DD] px-5 pb-8 pt-2">
+                            <div className="mp-card p-5">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-xs font-semibold text-slate-800">Total en cuenta</p>
+                                    <p className="text-[#0055DD] text-xs font-bold">Ver rendimiento ></p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-3xl font-bold text-slate-900">$ {balance.toLocaleString()}<span className="text-lg opacity-40 font-medium">22</span></h2>
+                                    <Icon name="eye" size={20} className="text-slate-300" />
+                                </div>
+
+                                <div className="mt-3 flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase">
+                                    <Icon name="info" size={12} />
+                                    <span>Puedes blindar {Math.floor(balance/200000)} meses más y ganar +$ 8.400/mes</span>
+                                </div>
+                                
+                                {/* SOLO DOS BOTONES DISPONIBLES */}
+                                <div className="flex justify-around mt-8 px-4">
+                                    <div className="btn-action">
+                                        <div className="icon-circle"><Icon name="plus" /></div>
+                                        <span className="text-[11px] font-semibold text-slate-600">Ingresar</span>
+                                    </div>
+                                    <div className="btn-action">
+                                        <div className="icon-circle"><Icon name="arrow-up-right" /></div>
+                                        <span className="text-[11px] font-semibold text-slate-600">Retirar</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. ALQUILERES Y PRÉSTAMO (LOGICA DE NEGOCIO) */}
+                        <div className="px-5 -mt-3 space-y-3">
+                            <div className="mp-card p-5 border-l-4 border-l-[#0055DD]">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Próximo Alquiler</p>
+                                        <h4 className="text-lg font-bold text-slate-800">Caseros 1230, 4B</h4>
+                                        <p className="text-xs text-slate-500 font-medium">Vence en 4 días (05/05)</p>
+                                    </div>
+                                    <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded">2 MESES BLINDADOS</span>
+                                </div>
+                                <div className="mt-6 flex justify-between items-end border-t border-slate-50 pt-4">
+                                    <div>
+                                        <p className="text-2xl font-bold text-slate-800">$ {rentAmount.toLocaleString()}</p>
+                                        <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase">G Ganado por resguardo: ${yieldGained.toLocaleString()}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setView('exito_pago')}
+                                        className="bg-[#0055DD] text-white px-5 py-2.5 rounded-md font-bold text-[11px] uppercase shadow-lg shadow-blue-100 active:scale-95 transition-all"
+                                    >
+                                        Pagar con blindaje
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* MOTOR DE PRÉSTAMO (CONDICIONAL POR SCORE) */}
+                            <div className="mp-card p-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white relative overflow-hidden">
+                                <Icon name="zap" size={60} className="absolute right-[-10px] top-[-10px] opacity-10" />
+                                <h4 className="text-sm font-bold mb-1">Tu Score te habilita un Adelanto</h4>
+                                <p className="text-[10px] text-white/60 mb-4 leading-tight">No tienes saldo para blindar Junio? Te prestamos $450.000 en 1 clic.</p>
+                                <button className="w-full bg-white text-slate-900 py-2.5 rounded-sm font-black text-[10px] uppercase tracking-widest">Pedir Préstamo Blindato</button>
+                            </div>
+                        </div>
+
+                        {/* 3. RANKING HIPOTECARIO (ESTILO MP CRÉDITO) */}
+                        <div className="px-5 mt-6">
+                            <div className="mp-card p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Icon name="home" /></div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-800 leading-tight">Ranking Casa Propia</h3>
+                                        <p className="text-xs text-slate-500">82% Calificado para tu hipoteca</p>
+                                    </div>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full progress-bar w-[82%]"></div></div>
+                            </div>
+                        </div>
+
+                        {/* 4. GRILLA DE SERVICIOS */}
+                        <div className="px-5 mt-8 grid grid-cols-4 gap-y-6">
+                            {[
+                                { label: 'Movimientos', icon: 'list-ordered', action: () => setView('movimientos') },
+                                { label: 'Tickets', icon: 'wrench' },
+                                { label: 'Bitácora', icon: 'camera' },
+                                { label: 'Facturas', icon: 'file-text' }
+                            ].map((s, i) => (
+                                <div key={i} onClick={s.action} className="flex flex-col items-center gap-2 cursor-pointer active:opacity-50">
+                                    <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name={s.icon} size={24}/></div>
+                                    <span className="text-[10px] font-medium text-slate-600">{s.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: MOVIMIENTOS (LEDGER) ---
+            const MovimientosView = () => (
+                <div className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
+                    <header className="p-5 flex items-center gap-4 border-b">
+                        <button onClick={() => setView('inicio')} className="p-2"><Icon name="arrow-left" className="text-slate-400"/></button>
+                        <h2 className="text-lg font-bold text-slate-800">Tus movimientos</h2>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar">
+                        <div className="p-5 space-y-6">
+                            <div className="relative"><Search className="absolute left-3 top-2.5 text-slate-300" size={18}/><input type="text" placeholder="Buscar en tu actividad" className="w-full bg-slate-50 p-2.5 pl-10 rounded-full text-sm outline-none"/></div>
+                            
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abril 2026</h3>
+                            <div className="space-y-5">
+                                {[
+                                    { t: "Pago de Alquiler", s: "- $ 450.000", desc: "Desarmo blindaje Abril", icon: "key", color: "text-red-500" },
+                                    { t: "Ingreso de dinero", s: "+ $ 200.000", desc: "Desde Banco Galicia", icon: "plus", color: "text-emerald-500" },
+                                    { t: "Armado de Blindaje", s: "Resguardado", desc: "Mes Mayo asegurado", icon: "shield-check", color: "text-blue-500" },
+                                    { t: "Rendimiento Blindaje", s: "+ $ 1.240", desc: "Interés diario FCI", icon: "trending-up", color: "text-emerald-500" }
+                                ].map((m, i) => (
+                                    <div key={i} className="flex justify-between items-center border-b border-slate-50 pb-4 last:border-0">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400"><Icon name={m.icon} size={20}/></div>
+                                            <div><p className="text-sm font-bold text-slate-800">{m.t}</p><p className="text-[10px] text-slate-400">{m.desc}</p></div>
+                                        </div>
+                                        <p className={`text-sm font-bold ${m.color}`}>{m.s}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- VISTA: PERFIL & AJUSTES ---
+            const PerfilView = () => (
+                <div className="flex flex-col h-full bg-[#F5F7FA] animate-in slide-in-from-bottom duration-300">
+                    <header className="p-6 flex justify-between items-center bg-white border-b">
+                        <h2 className="text-lg font-bold text-slate-800">Mi Perfil</h2>
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-100 rounded-full text-slate-400"><Icon name="x" size={20}/></button>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar">
+                        <div className="p-6 space-y-6">
+                            {/* Datos Usuario */}
+                            <div className="flex items-center gap-4 bg-white p-5 rounded-lg shadow-sm border border-slate-100">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos" className="w-16 h-16 rounded-full border-2 border-[#0055DD]" />
+                                <div><h3 className="font-bold text-slate-800">Marcos Galperin</h3><p className="text-xs text-slate-400">marcos@galperin.com</p></div>
+                            </div>
+
+                            {/* Mis Roles */}
+                            <section>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Mis Roles Activos</h4>
+                                <div className="space-y-2">
+                                    {['Inquilino', 'Propietario', 'Administrador'].map(r => (
+                                        <div key={r} onClick={() => setActiveRole(r)} className={`p-4 bg-white border rounded-md flex justify-between items-center cursor-pointer transition-all ${activeRole === r ? 'border-[#0055DD] ring-1 ring-[#0055DD]' : 'border-slate-100'}`}>
+                                            <div className="flex items-center gap-3"><Icon name={r === 'Inquilino' ? 'user' : r === 'Propietario' ? 'shield' : 'building-2'} className={activeRole === r ? 'text-[#0055DD]' : 'text-slate-300'}/><span className={`text-sm font-bold ${activeRole === r ? 'text-slate-800' : 'text-slate-400'}`}>{r}</span></div>
+                                            {activeRole === r && <CheckCircle2 size={18} className="text-[#0055DD]" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Acciones Config */}
+                            <div className="space-y-2">
+                                <button className="w-full bg-white p-4 border border-slate-100 rounded-md text-left text-sm font-bold text-slate-700 flex justify-between items-center"><div className="flex items-center gap-3"><Icon name="plus-circle" size={18} className="text-slate-400"/> Agregar Propiedad Nueva</div> <Icon name="chevron-right" size={16}/></button>
+                                <button className="w-full bg-white p-4 border border-slate-100 rounded-md text-left text-sm font-bold text-slate-700 flex justify-between items-center"><div className="flex items-center gap-3"><Icon name="key" size={18} className="text-slate-400"/> Resetear Clave</div> <Icon name="chevron-right" size={16}/></button>
+                                <button className="w-full bg-red-50 p-4 border border-red-100 rounded-md text-left text-sm font-bold text-red-600 flex justify-between items-center"><div className="flex items-center gap-3"><Icon name="user-x" size={18} className="text-red-400"/> Cancelar mi cuenta</div></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- VISTA: ÉXITO DE PAGO (ALIVIO) ---
+            const ExitoPagoView = () => (
+                <div className="flex flex-col h-full bg-emerald-600 text-white animate-in zoom-in-95 duration-500 items-center justify-center p-8 text-center">
+                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-2xl animate-pop">
+                        <Icon name="star" size={48} className="text-emerald-600 fill-emerald-600" />
+                    </div>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter">¡Mes Liberado!</h1>
+                    <p className="text-emerald-100 font-medium mt-2">Has ganado <strong>+500 Millas</strong> por usar tu resguardo.</p>
+                    
+                    <div className="mt-10 bg-white/10 rounded-2xl p-6 border border-white/20 w-full text-left">
+                        <div className="flex justify-between items-end">
+                            <div><p className="text-[10px] font-black uppercase opacity-60">Nuevo Rental Score</p><p className="text-4xl font-black text-white">880 pts</p></div>
+                            <div className="flex flex-col items-end"><p className="text-emerald-300 font-bold text-sm">+25</p><p className="text-[9px] font-black uppercase opacity-40">Impacto</p></div>
+                        </div>
+                    </div>
+
+                    <div className="w-full space-y-3 mt-12">
+                        <button className="w-full bg-white text-emerald-700 py-4 rounded-md font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3"><Icon name="share-2" size={16}/> Compartir Score Actualizado</button>
+                        <button onClick={() => setView('inicio')} className="w-full bg-transparent border border-white/40 text-white py-4 rounded-md font-black text-xs uppercase tracking-widest">Volver al Inicio</button>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="mobile-shell flex flex-col">
+                    {/* Notch Style */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black/10 rounded-b-3xl z-[150] flex items-center justify-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
+                        <div className="w-10 h-1 bg-white/20 rounded-full"></div>
+                    </div>
+
+                    {/* Vistas Principales */}
+                    {view === 'inicio' && <InicioView />}
+                    {view === 'movimientos' && <MovimientosView />}
+                    {view === 'perfil' && <PerfilView />}
+                    {view === 'exito_pago' && <ExitoPagoView />}
+
+                    {/* BOTTOM NAV ESTILO MP */}
+                    {['inicio', 'movimientos'].includes(view) && (
+                        <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 h-20 flex justify-around items-center px-2 z-[90]">
+                            <div onClick={() => setView('inicio')} className={`flex flex-col items-center gap-1 flex-1 ${view === 'inicio' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="home" size={24} strokeWidth={view === 'inicio' ? 2.5 : 2} />
+                                <span className="text-[10px] font-bold">Inicio</span>
+                            </div>
+                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 ${view === 'movimientos' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="file-search" size={24} />
+                                <span className="text-[10px] font-medium">Movimientos</span>
+                            </div>
+                            <div className="flex-1 flex justify-center">
+                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border -translate-y-4">
+                                    <Icon name="shield-check" size={32} className="text-[#0055DD]" strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center gap-1 flex-1 text-slate-300">
+                                <Icon name="tag" size={24} />
+                                <span className="text-[10px] font-medium">Boutique</span>
+                            </div>
+                            <div onClick={() => setView('perfil')} className="flex flex-col items-center gap-1 flex-1 text-slate-300">
+                                <Icon name="menu" size={24} />
+                                <span className="text-[10px] font-medium">Más</span>
+                            </div>
+                        </nav>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DptoLibreApp />);
+    </script>
+</body>
+</html>
