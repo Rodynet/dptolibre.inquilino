@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DptoLibre - Dashboard V61</title>
+    <title>DptoLibre - Sistema Operativo V62</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -26,6 +26,7 @@
         .face-guide { width: 200px; height: 200px; border: 3px solid var(--brand-cyan); border-radius: 50%; position: relative; box-shadow: 0 0 0 1000px rgba(0,0,0,0.7); }
         @keyframes pop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .success-bg { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
     </style>
 </head>
 <body>
@@ -40,18 +41,21 @@
         };
 
         function DptoLibreApp() {
-            // VIEWS: login, role, val_dni_f, val_dni_d, val_face, val_income, val_history, contract_bridge, link_bank, payment, signature, dashboard, movimientos, perfil, exito_pago
+            // VISTAS: login, role, val_dni_f, val_dni_d, val_face, dashboard, movimientos, perfil, exito_pago, add_property, scanner
             const [view, setView] = useState('login'); 
             const [activeRole, setActiveRole] = useState('Inquilino');
             const [isScanning, setIsScanning] = useState(false);
-            const [hasContract, setHasContract] = useState(false);
+            const [hasContract, setHasContract] = useState(true);
             
-            // Mock Global State
+            // Mock Data
             const [balance, setBalance] = useState(405430);
-            const rentAmount = 450000;
-            const yieldGained = 12450;
+            const [score, setScore] = useState(855);
+            const [properties, setProperties] = useState([
+                { address: "Caseros 1230, 4B", role: "Inquilino", status: "Activo" },
+                { address: "Av. Colón 450, 10C", role: "Propietario", status: "Alquilada" }
+            ]);
 
-            const handleTransition = (nextView, delay = 1500) => {
+            const handleTransition = (nextView, delay = 1200) => {
                 setIsScanning(true);
                 setTimeout(() => {
                     setIsScanning(false);
@@ -59,16 +63,14 @@
                 }, delay);
             };
 
-            // --- COMPONENTES DE FLUJO ---
-
             const LoadingOverlay = () => (
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-[200] flex flex-col items-center justify-center animate-in">
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-[200] flex flex-col items-center justify-center animate-in fade-in">
                     <div className="w-16 h-16 border-4 border-[#0055DD] border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-xs font-black text-[#0055DD] uppercase tracking-widest">Validando...</p>
+                    <p className="text-xs font-black text-[#0055DD] uppercase tracking-widest">Sincronizando...</p>
                 </div>
             );
 
-            // --- VISTAS DE ONBOARDING ---
+            // --- VISTAS DE ACCESO ---
 
             const LoginView = () => (
                 <div className="mobile-shell bg-white flex flex-col p-10 justify-center animate-in">
@@ -79,54 +81,15 @@
                         </div>
                     </div>
                     <div className="space-y-3 w-full">
-                        <button onClick={() => setView('role')} className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold bg-white border border-slate-200 text-slate-700 shadow-sm">
+                        <button onClick={() => setView('role')} className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold bg-white border border-slate-200 text-slate-700 shadow-sm active:scale-95 transition-all">
                             <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.26 1.07-3.71 1.07-2.87 0-5.3-1.94-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.11c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.09H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.91l3.66-2.8z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.09l3.66 2.8c.86-2.59 3.29-4.51 6.16-4.51z" fill="#EA4335"/></svg>
                             Continuar con Google
                         </button>
-                        <button onClick={() => setView('role')} className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold bg-black text-white shadow-lg"><Icon name="apple" size={18} className="fill-white"/> Continuar con Apple</button>
-                        <div className="py-4 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">o con email</div>
-                        <input type="email" placeholder="Email" className="w-full bg-slate-50 border-none p-4 rounded-xl text-sm font-medium" />
-                        <button onClick={() => setView('role')} className="w-full bg-[#0D1B4B] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest mt-4">Ingresar</button>
+                        <button onClick={() => setView('role')} className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold bg-black text-white shadow-lg active:scale-95 transition-all"><Icon name="apple" size={18} className="fill-white"/> Continuar con Apple</button>
+                        <div className="py-6 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">o con tu email</div>
+                        <input type="email" placeholder="Correo electrónico" className="w-full bg-slate-50 border-none p-4 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-[#0055DD]" />
+                        <button onClick={() => setView('role')} className="w-full bg-[#0D1B4B] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest mt-4 shadow-xl">Ingresar</button>
                     </div>
-                </div>
-            );
-
-            const RoleView = () => (
-                <div className="mobile-shell bg-white flex flex-col p-10 animate-in">
-                    <header className="mb-12 pt-10 text-center"><h2 className="text-3xl font-black text-[#0D1B4B] tracking-tighter uppercase leading-none">Tu Perfil</h2><p className="text-slate-400 text-sm mt-4 font-medium">Personalizaremos tu experiencia.</p></header>
-                    <div className="space-y-4 flex-1">
-                        {['Inquilino', 'Propietario', 'Administrador'].map(r => (
-                            <button key={r} onClick={() => setView('val_dni_f')} className="w-full p-6 border-2 border-slate-50 rounded-2xl text-left flex items-center gap-5 hover:border-[#0055DD] transition-all group">
-                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 group-hover:bg-[#0055DD] group-hover:text-white"><Icon name={r === 'Inquilino' ? 'user' : r === 'Propietario' ? 'shield' : 'building'} /></div>
-                                <div className="flex-1 font-black text-[#0D1B4B] uppercase text-sm">{r}</div>
-                                <Icon name="chevron-right" className="text-slate-200" />
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            );
-
-            const DniView = ({ side, next }) => (
-                <div className="mobile-shell bg-white flex flex-col animate-in">
-                    <header className="p-8 pb-4 flex justify-between items-center"><h2 className="text-2xl font-black text-[#0D1B4B] uppercase tracking-tighter">DNI {side}</h2></header>
-                    <main className="flex-1 p-8 flex flex-col justify-center text-center">
-                        <div className="w-full aspect-[3/2] bg-slate-900 rounded-[2rem] border-4 border-[#0055DD]/10 relative flex flex-col items-center justify-center overflow-hidden shadow-2xl">
-                             <div className="w-full h-1 bg-[#00D1FF]/40 absolute top-1/2"></div>
-                             <Icon name="camera" className="text-white opacity-20" size={48} />
-                             <p className="absolute bottom-4 text-[8px] font-black text-white/40 uppercase tracking-widest">Alineá el {side}</p>
-                        </div>
-                        <button onClick={() => handleTransition(next)} className="mt-auto w-full bg-[#0D1B4B] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Capturar</button>
-                    </main>
-                    {isScanning && <LoadingOverlay />}
-                </div>
-            );
-
-            const FaceView = () => (
-                <div className="mobile-shell bg-slate-900 flex flex-col items-center justify-center text-white animate-in">
-                    <div className="face-guide"></div>
-                    <div className="mt-12 text-center px-10"><h4 className="text-xl font-black uppercase tracking-widest mb-2">Prueba de Vida</h4><p className="text-white/50 text-sm">Mantené el rostro centrado y parpadeá.</p></div>
-                    <button onClick={() => handleTransition('dashboard')} className="mt-16 bg-[#00D1FF] text-[#0D1B4B] px-12 py-4 rounded-2xl font-black text-xs uppercase tracking-widest">Iniciar</button>
-                    {isScanning && <LoadingOverlay />}
                 </div>
             );
 
@@ -136,14 +99,14 @@
                 <div className="flex flex-col h-full animate-in fade-in duration-300">
                     <header className="bg-[#0055DD] px-5 pt-12 pb-4 flex justify-between items-center text-white">
                         <div onClick={() => setView('perfil')} className="flex items-center gap-3 cursor-pointer group active:opacity-70 transition-opacity">
-                            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-white/10">
+                            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-white/10 shadow-lg">
                                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos" alt="Perfil" />
                             </div>
                             <div className="flex flex-col">
                                 <p className="text-sm font-bold leading-none">Hola, Marcos <Icon name="chevron-right" size={14} className="inline opacity-60"/></p>
                                 <div className="flex items-center gap-1 mt-1 opacity-80">
                                     <Icon name="sparkles" size={10} className="text-yellow-300" />
-                                    <span className="text-[10px] font-medium">4.500 Millas • Platinum</span>
+                                    <span className="text-[10px] font-medium">Score {score} • Platinum</span>
                                 </div>
                             </div>
                         </div>
@@ -154,27 +117,27 @@
                     </header>
 
                     <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
-                        {/* 1. SECCIÓN SALDO */}
+                        {/* SALDO MP STYLE */}
                         <div className="bg-[#0055DD] px-5 pb-8 pt-2">
-                            <div className="mp-card p-5 shadow-xl">
+                            <div className="mp-card p-5 shadow-2xl">
                                 <div className="flex justify-between items-center mb-1">
-                                    <p className="text-xs font-semibold text-slate-800 uppercase tracking-tighter">Total en cuenta</p>
-                                    <p className="text-[#0055DD] text-[11px] font-bold">Ver rendimiento ></p>
+                                    <p className="text-xs font-semibold text-slate-800 uppercase tracking-tighter">Saldo Disponible</p>
+                                    <p className="text-[#0055DD] text-[11px] font-bold">Inversiones ></p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-3xl font-bold text-slate-900">$ {balance.toLocaleString()}</h2>
                                     <Icon name="eye" size={20} className="text-slate-200" />
                                 </div>
-                                <div className="mt-3 flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase">
+                                <div className="mt-4 flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase bg-emerald-50 p-2 rounded-md">
                                     <Icon name="trending-up" size={12} />
-                                    <span>Ganas +$ 8.400/mes si blindas tu saldo</span>
+                                    <span>Con este saldo blindas 2 meses y ganas +$ 14.500</span>
                                 </div>
-                                <div className="flex justify-around mt-8 px-2">
-                                    <div className="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+                                <div className="flex justify-around mt-8 px-2 border-t pt-6 border-slate-50">
+                                    <div className="flex flex-col items-center gap-2 group active:scale-95 transition-all cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0055DD]"><Icon name="plus" /></div>
                                         <span className="text-[11px] font-semibold text-slate-600 uppercase">Ingresar</span>
                                     </div>
-                                    <div className="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+                                    <div className="flex flex-col items-center gap-2 group active:scale-95 transition-all cursor-pointer">
                                         <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0055DD]"><Icon name="arrow-up-right" /></div>
                                         <span className="text-[11px] font-semibold text-slate-600 uppercase">Retirar</span>
                                     </div>
@@ -182,109 +145,82 @@
                             </div>
                         </div>
 
-                        {/* 2. ALQUILERES */}
-                        <div className="px-5 -mt-3 space-y-3">
-                            {!hasContract ? (
-                                <div className="mp-card p-8 border-2 border-dashed border-slate-200 text-center space-y-4">
-                                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300"><Icon name="file-search" size={32} /></div>
+                        {/* ALQUILER ACTIVO */}
+                        <div className="px-5 -mt-3 space-y-4">
+                            <div className="mp-card p-5 border-l-4 border-l-[#0055DD] animate-in">
+                                <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h4 className="font-black text-[#0D1B4B] uppercase text-sm">Esperando Contrato</h4>
-                                        <p className="text-xs text-slate-400 mt-1">Vincula tu unidad para activar la gestión.</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Próximo Alquiler</p>
+                                        <h4 className="text-lg font-bold text-slate-800 leading-none">Caseros 1230, 4B</h4>
+                                        <p className="text-xs text-slate-500 mt-1">Vence en 4 días (05/05)</p>
                                     </div>
-                                    <button onClick={() => setHasContract(true)} className="w-full bg-[#0055DD] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">
-                                        <Icon name="qr-code" size={18}/> VINCULAR AHORA
-                                    </button>
+                                    <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded uppercase">Blindado</span>
                                 </div>
-                            ) : (
-                                <div className="mp-card p-5 border-l-4 border-l-[#0055DD] animate-in slide-in-from-right">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Próximo Alquiler</p>
-                                            <h4 className="text-lg font-bold text-slate-800">Caseros 1230, 4B</h4>
-                                            <p className="text-xs text-slate-500">Vence el 05/05 (Faltan 4 días)</p>
-                                        </div>
-                                        <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded uppercase">2 MESES BLINDADOS</span>
+                                <div className="flex items-end justify-between border-t border-slate-50 pt-5">
+                                    <div>
+                                        <p className="text-2xl font-bold text-slate-800">$ 450.000</p>
+                                        <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase tracking-tighter">Rendimiento acumulado: +$12.450</p>
                                     </div>
-                                    <div className="mt-6 flex justify-between items-end border-t border-slate-50 pt-4">
-                                        <div>
-                                            <p className="text-2xl font-bold text-slate-800">$ {rentAmount.toLocaleString()}</p>
-                                            <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase">Interés generado: +${yieldGained.toLocaleString()}</p>
-                                        </div>
-                                        <button onClick={() => setView('exito_pago')} className="bg-[#0D1B4B] text-white px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-xl">Pagar</button>
-                                    </div>
+                                    <button onClick={() => setView('exito_pago')} className="bg-[#0055DD] text-white px-6 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-xl">Pagar Alquiler</button>
                                 </div>
-                            )}
+                            </div>
 
-                            {/* PRESTAMO */}
-                            <div className="mp-card p-5 bg-slate-900 text-white relative overflow-hidden group active:opacity-90">
+                            {/* PRESTAMO POR SCORE */}
+                            <div className="mp-card p-5 bg-slate-900 text-white relative overflow-hidden group active:opacity-90 cursor-pointer">
                                 <Icon name="zap" size={60} className="absolute right-[-10px] top-[-10px] opacity-10" />
-                                <h4 className="text-sm font-bold mb-1 uppercase tracking-tighter">Adelanto Disponible</h4>
-                                <p className="text-[10px] text-white/50 mb-4 leading-tight">Tu score Platinum te permite adelantar hasta $450.000 para blindar el próximo mes.</p>
-                                <button className="w-full bg-white text-slate-900 py-3 rounded-md font-black text-[10px] uppercase tracking-widest">Pedir en 1 clic</button>
+                                <h4 className="text-sm font-bold mb-1 uppercase tracking-tighter">Préstamo Express Disponible</h4>
+                                <p className="text-[10px] text-white/50 mb-4 leading-tight">Por tu Score de {score} puntos, tienes $450.000 pre-aprobados para blindar.</p>
+                                <button className="w-full bg-white text-slate-900 py-3 rounded-md font-black text-[10px] uppercase tracking-widest">Pedir Ahora</button>
                             </div>
                         </div>
 
-                        {/* 3. META CASA PROPIA */}
-                        <div className="px-5 mt-6">
-                            <div className="mp-card p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Icon name="home" /></div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-slate-800 leading-tight">Ranking Hipotecario</h3>
-                                        <p className="text-xs text-slate-500">82% Calificado para tu casa propia</p>
-                                    </div>
-                                </div>
-                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full progress-bar w-[82%]"></div></div>
-                            </div>
-                        </div>
-
-                        {/* 4. GRILLA DE SERVICIOS */}
+                        {/* SERVICIOS GRILLA */}
                         <div className="px-5 mt-8 grid grid-cols-4 gap-y-6">
-                            <div onClick={() => setView('movimientos')} className="flex flex-col items-center gap-2 cursor-pointer active:opacity-50 transition-opacity">
+                            <div onClick={() => setView('movimientos')} className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-all">
                                 <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name="list-ordered" size={24}/></div>
-                                <span className="text-[10px] font-medium text-slate-600">Movimientos</span>
+                                <span className="text-[10px] font-medium text-slate-600">Actividad</span>
                             </div>
-                            <div className="flex flex-col items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 active:scale-95 transition-all cursor-pointer">
                                 <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name="wrench" size={24}/></div>
                                 <span className="text-[10px] font-medium text-slate-600">Tickets</span>
                             </div>
-                            <div className="flex flex-col items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 active:scale-95 transition-all cursor-pointer">
                                 <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name="camera" size={24}/></div>
                                 <span className="text-[10px] font-medium text-slate-600">Bitácora</span>
                             </div>
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name="plus-circle" size={24}/></div>
-                                <span className="text-[10px] font-medium text-slate-600">Ver más</span>
+                            <div className="flex flex-col items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                                <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name="tag" size={24}/></div>
+                                <span className="text-[10px] font-medium text-slate-600">Boutique</span>
                             </div>
                         </div>
                     </main>
                 </div>
             );
 
-            // --- VISTA: MOVIMIENTOS ---
+            // --- VISTA: MOVIMIENTOS (LEDGER) ---
 
             const MovimientosView = () => (
                 <div className="flex flex-col h-full bg-white animate-in slide-in-from-right duration-300">
-                    <header className="p-5 pt-12 flex items-center gap-4 border-b">
-                        <button onClick={() => setView('dashboard')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="arrow-left" /></button>
-                        <h2 className="text-lg font-bold text-slate-800">Tus movimientos</h2>
+                    <header className="p-5 pt-12 flex items-center gap-4 border-b border-slate-100">
+                        <button onClick={() => setView('dashboard')} className="p-2 bg-slate-50 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="arrow-left" /></button>
+                        <h2 className="text-lg font-bold text-slate-800">Tu Actividad</h2>
                     </header>
                     <div className="flex-1 overflow-y-auto no-scrollbar">
                         <div className="p-5 space-y-6">
-                            <div className="relative"><Search className="absolute left-3 top-3 text-slate-300" size={18}/><input type="text" placeholder="Buscar en tu actividad" className="w-full bg-slate-50 p-3 pl-10 rounded-full text-sm outline-none border border-slate-100 focus:border-[#0055DD]"/></div>
+                            <div className="relative"><Icon name="search" className="absolute left-3 top-3.5 text-slate-300" size={16}/><input type="text" placeholder="Busca un pago o ingreso" className="w-full bg-slate-50 p-3.5 pl-10 rounded-xl text-sm outline-none border border-slate-50 focus:border-[#0055DD] transition-all"/></div>
                             
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abril 2026</h3>
                             <div className="space-y-6">
                                 {[
-                                    { t: "Desarme de Blindaje", s: "- $ 450.000", desc: "Pago Alquiler Abril", icon: "key", color: "text-red-500" },
-                                    { t: "Ingreso de dinero", s: "+ $ 200.000", desc: "Desde Banco Galicia", icon: "plus", color: "text-emerald-500" },
-                                    { t: "Armado de Blindaje", s: "Resguardado", desc: "Mes Mayo asegurado", icon: "shield-check", color: "text-blue-500" },
-                                    { t: "Rendimiento diario", s: "+ $ 1.240", desc: "Interés acumulado", icon: "trending-up", color: "text-emerald-500" }
+                                    { t: "Pago de Alquiler", s: "- $ 450.000", desc: "Caseros 1230 - Abril", icon: "key", color: "text-red-500" },
+                                    { t: "Intereses Blindado", s: "+ $ 1.240", desc: "Rendimiento diario", icon: "trending-up", color: "text-emerald-500" },
+                                    { t: "Ingreso de dinero", s: "+ $ 150.000", desc: "Desde Banco Galicia", icon: "plus", color: "text-emerald-500" },
+                                    { t: "Armado de Blindaje", s: "Resguardado", desc: "Mayo asegurado", icon: "shield-check", color: "text-[#0055DD]" }
                                 ].map((m, i) => (
-                                    <div key={i} className="flex justify-between items-center group active:opacity-60 transition-opacity">
+                                    <div key={i} className="flex justify-between items-center group active:opacity-60 transition-opacity cursor-pointer">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100"><Icon name={m.icon} size={24}/></div>
-                                            <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{m.t}</p><p className="text-[10px] text-slate-400 uppercase font-medium">{m.desc}</p></div>
+                                            <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{m.t}</p><p className="text-[10px] text-slate-400 font-medium uppercase">{m.desc}</p></div>
                                         </div>
                                         <p className={`text-sm font-black ${m.color}`}>{m.s}</p>
                                     </div>
@@ -295,49 +231,51 @@
                 </div>
             );
 
-            // --- VISTA: MI PERFIL (USUARIO) ---
+            // --- VISTA: MI PERFIL (GESTIÓN MULTI-ROL) ---
 
             const PerfilView = () => (
                 <div className="flex flex-col h-full bg-[#F5F7FA] animate-in slide-in-from-bottom duration-300">
-                    <header className="p-6 pt-12 flex justify-between items-center bg-white border-b">
+                    <header className="p-6 pt-12 flex justify-between items-center bg-white border-b border-slate-100">
                         <h2 className="text-lg font-bold text-slate-800">Mi Perfil</h2>
-                        <button onClick={() => setView('dashboard')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="x" size={24}/></button>
+                        <button onClick={() => setView('dashboard')} className="p-2 bg-slate-100 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="x" size={24}/></button>
                     </header>
                     <div className="flex-1 overflow-y-auto no-scrollbar">
                         <div className="p-6 space-y-8">
-                            {/* Identidad */}
-                            <div className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
-                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos" className="w-20 h-20 rounded-full border-2 border-[#0055DD] bg-slate-50" />
-                                <div><h3 className="text-xl font-black text-slate-800 leading-none mb-1">Marcos Galperin</h3><p className="text-xs text-slate-400 font-medium">marcos@galperin.com</p></div>
+                            {/* Identidad de Marca */}
+                            <div className="flex items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-50">
+                                <div className="w-20 h-20 rounded-full border-2 border-[#0055DD] p-1 bg-white">
+                                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos" className="w-full h-full rounded-full bg-slate-50" />
+                                </div>
+                                <div><h3 className="text-xl font-black text-slate-800 tracking-tight">Marcos Galperin</h3><p className="text-xs text-slate-400 font-medium">marcos.g@email.com</p></div>
                             </div>
 
-                            {/* Selector de Roles */}
+                            {/* Mis Propiedades (Módulo Pedido) */}
                             <section>
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Cambiar de Perfil</h4>
-                                <div className="space-y-3">
-                                    {['Inquilino', 'Propietario', 'Administrador'].map(r => (
-                                        <div key={r} onClick={() => { setActiveRole(r); setView('dashboard'); }} className={`p-5 bg-white border-2 rounded-2xl flex justify-between items-center cursor-pointer transition-all ${activeRole === r ? 'border-[#0055DD] bg-blue-50/50' : 'border-slate-50'}`}>
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeRole === r ? 'bg-[#0055DD] text-white shadow-lg' : 'bg-slate-50 text-slate-300'}`}><Icon name={r === 'Inquilino' ? 'user' : r === 'Propietario' ? 'shield' : 'building-2'} size={20}/></div>
-                                                <span className={`text-sm font-black uppercase ${activeRole === r ? 'text-slate-800' : 'text-slate-400'}`}>{r}</span>
+                                <div className="flex justify-between items-center mb-4 px-1">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mis Activos y Roles</h4>
+                                    <button onClick={() => setView('add_property')} className="text-[#0055DD] text-[10px] font-black uppercase flex items-center gap-1"><Icon name="plus-circle" size={14}/> Agregar</button>
+                                </div>
+                                <div className="space-y-2">
+                                    {properties.map((p, i) => (
+                                        <div key={i} className="p-4 bg-white border border-slate-100 rounded-xl flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-blue-50 text-[#0055DD] rounded-lg flex items-center justify-center"><Icon name="home" size={18}/></div>
+                                                <div><p className="text-sm font-bold text-slate-800">{p.address}</p><p className="text-[10px] text-slate-400 font-bold uppercase">{p.role}</p></div>
                                             </div>
-                                            {activeRole === r && <Icon name="check-circle" className="text-emerald-500" size={24} />}
+                                            <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">{p.status}</span>
                                         </div>
                                     ))}
                                 </div>
                             </section>
 
-                            {/* Acciones de Ajustes */}
+                            {/* Ajustes Rápidos */}
                             <section className="space-y-2">
-                                <button className="w-full bg-white p-5 border border-slate-100 rounded-2xl text-left text-sm font-bold text-slate-700 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                    <div className="flex items-center gap-4"><Icon name="plus-circle" className="text-indigo-400"/> Agregar Propiedad</div> 
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Configuración</h4>
+                                <button className="w-full bg-white p-5 border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex justify-between items-center active:bg-slate-50 transition-colors">
+                                    <div className="flex items-center gap-4"><Icon name="key" className="text-slate-300"/> Cambiar Contraseña</div> 
                                     <Icon name="chevron-right" className="text-slate-200"/>
                                 </button>
-                                <button className="w-full bg-white p-5 border border-slate-100 rounded-2xl text-left text-sm font-bold text-slate-700 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                                    <div className="flex items-center gap-4"><Icon name="key" className="text-indigo-400"/> Resetear Clave</div> 
-                                    <Icon name="chevron-right" className="text-slate-200"/>
-                                </button>
-                                <button className="w-full bg-red-50 p-5 border border-red-100 rounded-2xl text-left text-sm font-black text-red-600 flex justify-between items-center mt-10 active:scale-95 transition-all">
+                                <button className="w-full bg-red-50 p-5 border border-red-100 rounded-xl text-left text-sm font-black text-red-600 flex justify-between items-center mt-10 active:scale-95 transition-all">
                                     <div className="flex items-center gap-4"><Icon name="user-x" /> Cancelar mi cuenta</div>
                                 </button>
                             </section>
@@ -346,74 +284,145 @@
                 </div>
             );
 
-            // --- VISTA: ÉXITO PAGO ---
+            // --- VISTA: AGREGAR PROPIEDAD (LÓGICA PEDIDA) ---
+
+            const AddPropertyView = () => {
+                const [selRole, setSelRole] = useState(null);
+                
+                return (
+                    <div className="flex flex-col h-full bg-white animate-in slide-in-from-bottom duration-300">
+                        <header className="p-6 pt-12 flex items-center gap-4 border-b border-slate-100">
+                            <button onClick={() => setView('perfil')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="arrow-left" /></button>
+                            <h2 className="text-lg font-bold text-slate-800 uppercase tracking-tight">Nueva Propiedad</h2>
+                        </header>
+                        
+                        <main className="flex-1 p-8 space-y-8">
+                            <div className="text-center">
+                                <h3 className="text-xl font-black text-slate-800">¿Qué rol tendrás aquí?</h3>
+                                <p className="text-sm text-slate-400 mt-2">Personalizaremos el alta según tu necesidad.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <button onClick={() => setSelRole('prop')} className={`w-full p-6 border-2 rounded-2xl flex items-center gap-5 transition-all ${selRole === 'prop' ? 'border-[#0055DD] bg-blue-50' : 'border-slate-50 bg-slate-50'}`}>
+                                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selRole === 'prop' ? 'bg-[#0055DD] text-white shadow-lg' : 'bg-white text-slate-300'}`}><Icon name="shield" size={32}/></div>
+                                    <div className="text-left"><p className="font-black text-slate-800 uppercase text-sm">Soy Propietario</p><p className="text-xs text-slate-400">Tengo una unidad para cobrar.</p></div>
+                                </button>
+
+                                <button onClick={() => setSelRole('inq')} className={`w-full p-6 border-2 rounded-2xl flex items-center gap-5 transition-all ${selRole === 'inq' ? 'border-[#0055DD] bg-blue-50' : 'border-slate-50 bg-slate-50'}`}>
+                                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selRole === 'inq' ? 'bg-[#0055DD] text-white shadow-lg' : 'bg-white text-slate-300'}`}><Icon name="user" size={32}/></div>
+                                    <div className="text-left"><p className="font-black text-slate-800 uppercase text-sm">Soy Inquilino</p><p className="text-xs text-slate-400">Vincularme a un contrato.</p></div>
+                                </button>
+                            </div>
+
+                            {selRole === 'inq' && (
+                                <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100 animate-in fade-in zoom-in">
+                                    <div className="flex gap-4">
+                                        <Icon name="qr-code" className="text-amber-500" size={32}/>
+                                        <div><p className="text-xs font-black text-amber-800 uppercase leading-tight">Acción Necesaria</p><p className="text-[11px] text-amber-700 mt-1">Como Inquilino, debes escanear el QR provisto por tu Inmobiliaria para vincularte legalmente.</p></div>
+                                    </div>
+                                    <button onClick={() => handleTransition('scanner')} className="w-full bg-[#0D1B4B] text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest mt-6 shadow-xl active:scale-95 transition-all">ESCANEAR QR DE INMOBILIARIA</button>
+                                </div>
+                            )}
+
+                            {selRole === 'prop' && (
+                                <div className="bg-slate-900 p-6 rounded-2xl text-white animate-in fade-in zoom-in">
+                                    <p className="text-xs font-black uppercase text-[#00D1FF] mb-2">Paso 1: Documentación</p>
+                                    <p className="text-sm font-medium opacity-70 mb-6">Carga tu título de propiedad o contrato de administración para que Blindato lo valide.</p>
+                                    <button className="w-full bg-white text-slate-900 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-2"><Icon name="upload" size={16}/> SUBIR DOCUMENTOS</button>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+                );
+            };
+
+            const ScannerView = () => (
+                <div className="mobile-shell bg-slate-900 flex flex-col animate-in fade-in duration-500">
+                    <header className="p-6 pt-12 flex justify-between items-center text-white">
+                        <button onClick={() => setView('add_property')}><Icon name="arrow-left" /></button>
+                        <h2 className="text-xs font-black uppercase tracking-widest">Escáner de Contrato</h2>
+                        <div className="w-8"></div>
+                    </header>
+                    <main className="flex-1 flex flex-col items-center justify-center">
+                        <div className="w-64 h-64 border-4 border-dashed border-[#00D1FF] rounded-3xl relative flex items-center justify-center">
+                            <div className="w-full h-1 bg-[#00D1FF]/40 absolute top-1/2 animate-bounce shadow-[0_0_20px_#00D1FF]"></div>
+                            <Icon name="maximize" size={48} className="text-white opacity-20" />
+                        </div>
+                        <p className="text-white font-bold text-sm mt-12 px-10 text-center opacity-60 italic">Alinea el código QR de la inmobiliaria para completar el pasaporte de inquilino.</p>
+                    </main>
+                    <footer className="p-10 flex justify-center"><button onClick={() => handleTransition('dashboard')} className="text-[#00D1FF] font-black text-xs uppercase tracking-widest border-b-2 border-[#00D1FF]">Simular Escaneo Exitoso</button></footer>
+                </div>
+            );
+
+            // --- VISTA: ÉXITO PAGO (ESTRELLA + SCORE) ---
 
             const ExitoPagoView = () => (
-                <div className="flex flex-col h-full bg-[#10B981] text-white animate-in zoom-in-95 duration-500 items-center justify-center p-8 text-center">
-                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-8 shadow-2xl animate-pop">
-                        <Icon name="star" size={48} className="text-[#10B981] fill-[#10B981]" />
+                <div className="flex flex-col h-full success-bg text-white animate-in zoom-in-95 duration-500 items-center justify-center p-10 text-center">
+                    <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center mb-8 shadow-2xl animate-pop">
+                        <Icon name="star" size={56} className="text-[#10B981] fill-[#10B981]" />
                     </div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">¡Alquiler Pagado!</h1>
-                    <p className="text-emerald-100 font-medium mb-12">Usaste tu blindaje de Abril. <br/> Ganaste <strong>+500 Millas</strong> por cumplimiento.</p>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">¡PAGO EXITOSO!</h1>
+                    <p className="text-emerald-50 font-medium mb-12">Usaste tu blindaje de Abril con éxito. <br/> Has ganado <strong>+500 Millas</strong> de reputación.</p>
                     
                     <div className="w-full bg-black/10 rounded-3xl p-6 border border-white/20 text-left">
                         <div className="flex justify-between items-end">
-                            <div><p className="text-[10px] font-black uppercase opacity-60">Rental Score Actual</p><p className="text-4xl font-black text-white">880 pts</p></div>
+                            <div><p className="text-[10px] font-black uppercase opacity-60">Nuevo Rental Score</p><p className="text-4xl font-black text-white">{score + 25} pts</p></div>
                             <div className="flex flex-col items-end"><p className="text-emerald-300 font-black text-sm">+25</p><p className="text-[9px] font-black uppercase opacity-40 tracking-widest">Impacto</p></div>
                         </div>
                     </div>
 
                     <div className="w-full space-y-4 mt-12">
-                        <button onClick={() => alert("Score Compartido")} className="w-full bg-white text-emerald-700 py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl"><Icon name="share-2" /> Compartir mi Score</button>
-                        <button onClick={() => setView('dashboard')} className="w-full bg-transparent border border-white/40 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest">Cerrar</button>
+                        <button onClick={() => { setScore(score+25); alert("Score compartido!"); }} className="w-full bg-white text-emerald-700 py-5 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all"><Icon name="share-2" /> Compartir mi Score</button>
+                        <button onClick={() => setView('dashboard')} className="w-full bg-transparent border border-white/40 text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Ir al Inicio</button>
                     </div>
                 </div>
             );
 
-            // --- ROUTER LÓGICO ---
+            // --- LÓGICA DE NAVEGACIÓN GLOBAL ---
 
             return (
                 <div className="mobile-shell flex flex-col">
-                    {/* Notch Style */}
+                    {/* Notch Superior Style */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black/10 rounded-b-3xl z-[150] flex items-center justify-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-white/20"></div>
                         <div className="w-10 h-1 bg-white/20 rounded-full"></div>
                     </div>
 
-                    {/* Vistas */}
+                    {/* Vistas Principales */}
                     {view === 'login' && <LoginView />}
-                    {view === 'role' && <RoleView />}
-                    {view === 'val_dni_f' && <DniView side="Frente" next="val_dni_d" />}
-                    {view === 'val_dni_d' && <DniView side="Dorso" next="val_face" />}
-                    {view === 'val_face' && <FaceView />}
+                    {view === 'role' && <div className="h-full flex items-center justify-center"><button onClick={() => setView('dashboard')} className="bg-[#0055DD] text-white p-4 rounded-xl font-black">ENTRAR COMO INQUILINO</button></div>}
                     {view === 'dashboard' && <DashboardView />}
                     {view === 'movimientos' && <MovimientosView />}
                     {view === 'perfil' && <PerfilView />}
                     {view === 'exito_pago' && <ExitoPagoView />}
+                    {view === 'add_property' && <AddPropertyView />}
+                    {view === 'scanner' && <ScannerView />}
+
+                    {isScanning && <LoadingOverlay />}
 
                     {/* BOTTOM NAV ESTILO MP (Solo en Dashboard y Movimientos) */}
                     {['dashboard', 'movimientos'].includes(view) && (
                         <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 h-20 flex justify-around items-center px-2 z-[90] shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
-                            <div onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'dashboard' ? 'text-[#0055DD] scale-110' : 'text-slate-300'}`}>
+                            <div onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'dashboard' ? 'text-[#0055DD] scale-110 font-bold' : 'text-slate-300 font-medium'}`}>
                                 <Icon name="home" size={24} strokeWidth={view === 'dashboard' ? 2.5 : 2} />
-                                <span className="text-[10px] font-bold">Inicio</span>
+                                <span className="text-[10px]">Inicio</span>
                             </div>
-                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'movimientos' ? 'text-[#0055DD] scale-110' : 'text-slate-300'}`}>
+                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'movimientos' ? 'text-[#0055DD] scale-110 font-bold' : 'text-slate-300 font-medium'}`}>
                                 <Icon name="file-search" size={24} strokeWidth={view === 'movimientos' ? 2.5 : 2} />
-                                <span className="text-[10px] font-bold">Actividad</span>
+                                <span className="text-[10px]">Actividad</span>
                             </div>
                             <div className="flex-1 flex justify-center">
-                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border -translate-y-4 active:scale-90 transition-transform">
+                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-50 -translate-y-4 active:scale-90 transition-transform">
                                     <Icon name="shield-check" size={32} className="text-[#0055DD]" strokeWidth={2.5} />
                                 </div>
                             </div>
                             <div className="flex flex-col items-center gap-1 flex-1 text-slate-300 active:opacity-60 transition-opacity">
                                 <Icon name="tag" size={24} />
-                                <span className="text-[10px] font-bold">Boutique</span>
+                                <span className="text-[10px] font-medium">Boutique</span>
                             </div>
                             <div onClick={() => setView('perfil')} className="flex flex-col items-center gap-1 flex-1 text-slate-300 cursor-pointer active:scale-110 transition-all">
                                 <Icon name="menu" size={24} />
-                                <span className="text-[10px] font-bold">Más</span>
+                                <span className="text-[10px] font-medium">Más</span>
                             </div>
                         </nav>
                     )}
