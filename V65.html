@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DptoLibre - Sistema Operativo V65</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root { --brand-blue: #0055DD; --brand-cyan: #00D1FF; --bg-white: #ffffff; --card-gray: #F8FAFC; }
+        body { font-family: 'Inter', sans-serif; background-color: #cbd5e1; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        .mobile-shell { width: 100%; height: 100vh; max-width: 414px; margin: 0 auto; background: var(--bg-white); position: relative; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.2); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .mp-card { background: var(--card-gray); border-radius: 6px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .progress-bar { background: linear-gradient(90deg, #0055DD 0%, #00D1FF 100%); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        .success-bg { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { window.lucide && window.lucide.createIcons(); }, [name, size, className]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        function DptoLibreApp() {
+            const [view, setView] = useState('inicio'); 
+            const [activeRole, setActiveRole] = useState('Inquilino');
+            const [isScanning, setIsScanning] = useState(false);
+            
+            // Mock de Negocio
+            const rentAmount = 450000;
+            const [balanceTotal, setBalanceTotal] = useState(985430); 
+            const [interestEarned, setInterestEarned] = useState(12430);
+            
+            // Cálculos de Blindaje
+            const blindedMonths = Math.floor((balanceTotal - interestEarned) / rentAmount);
+            const blindedCapital = blindedMonths * rentAmount;
+            const unblindedCapital = balanceTotal - blindedCapital - interestEarned;
+            const missingForNext = rentAmount - unblindedCapital;
+
+            const properties = [
+                { address: "Caseros 1230, 4B", role: "Inquilino", status: "Activo" },
+                { address: "Av. Colón 450, 10C", role: "Propietario", status: "Alquilada" }
+            ];
+
+            const handleTransition = (nextView, delay = 1200) => {
+                setIsScanning(true);
+                setTimeout(() => {
+                    setIsScanning(false);
+                    setView(nextView);
+                }, delay);
+            };
+
+            // --- VISTA: INICIO (DASHBOARD) ---
+            const InicioView = () => (
+                <div className="flex flex-col h-full animate-in">
+                    <header className="bg-white px-5 pt-12 pb-4 flex justify-between items-center border-b border-slate-50">
+                        <div onClick={() => setView('perfil')} className="flex items-center gap-3 cursor-pointer active:opacity-60 transition-opacity">
+                            <div className="w-10 h-10 rounded-full border-2 border-[#0055DD] overflow-hidden shadow-sm bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" alt="User" />
+                            </div>
+                            <div className="flex flex-col">
+                                <p className="text-sm font-bold text-slate-800 leading-none">Marcos G. <Icon name="chevron-right" size={14} className="inline opacity-30"/></p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Icon name="award" size={10} className="text-amber-500" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Platinum • 875 pts</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <button className="text-slate-300"><Icon name="share-2" size={20} /></button>
+                            <button className="text-slate-300 relative"><Icon name="bell" size={20} /><div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div></button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6 pb-32">
+                        
+                        {/* 1. BILLETERA DE COMPOSICIÓN (V63 LOGIC) */}
+                        <div className="mp-card p-6 shadow-sm border border-slate-100">
+                            <div className="flex justify-between items-center mb-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Saldo en Billetera</p>
+                                <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded uppercase">Rinde 81,4%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-3xl font-bold text-slate-900">$ {balanceTotal.toLocaleString()}</h2>
+                                <Icon name="eye" size={20} className="text-slate-200" />
+                            </div>
+
+                            {/* Desglose Segmentado */}
+                            <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-slate-100">
+                                <div>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase">Blindado ({blindedMonths}m)</p>
+                                    <p className="text-xs font-bold text-slate-700">${blindedCapital.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase">Intereses</p>
+                                    <p className="text-xs font-bold text-emerald-600">+${interestEarned.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase">Sin Blindar</p>
+                                    <p className="text-xs font-bold text-slate-700">${unblindedCapital.toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                            {/* Nudge de Mejora */}
+                            <div className="mt-6 p-4 bg-blue-50/50 border border-blue-100/50 rounded flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] font-bold text-[#0055DD] uppercase tracking-tighter">¡Te falta poco!</p>
+                                    <p className="text-[10px] font-black text-[#0055DD]">${missingForNext.toLocaleString()}</p>
+                                </div>
+                                <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-[#0055DD]" style={{width: `${(unblindedCapital/rentAmount)*100}%`}}></div>
+                                </div>
+                                <p className="text-[9px] text-indigo-400 font-medium">Suma lo que falta para blindar <strong>un mes más</strong> y duplicar tus millas de racha.</p>
+                            </div>
+
+                            <div className="flex gap-4 mt-6">
+                                <button className="flex-1 py-4 bg-[#0055DD] text-white rounded font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-50 active:scale-95 transition-all">
+                                    <Icon name="plus" size={16} /> Sumar Dinero
+                                </button>
+                                <button className="flex-1 py-4 bg-white border border-slate-200 text-slate-400 rounded font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all">
+                                    <Icon name="arrow-up-right" size={16} /> Retirar
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 2. ALQUILER ACTUAL Y PRÉSTAMO */}
+                        <div className="space-y-4">
+                            <div className="mp-card p-5 border-l-4 border-l-[#0055DD]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tu Alquiler Abril</p>
+                                        <h4 className="text-lg font-bold text-slate-800 leading-none">Caseros 1230, 4B</h4>
+                                        <p className="text-xs text-slate-400 mt-1">Vence el 05/05 (4 días)</p>
+                                    </div>
+                                    <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded">BLINDADO OK</span>
+                                </div>
+                                <div className="flex items-end justify-between border-t border-slate-50 pt-5">
+                                    <div>
+                                        <p className="text-2xl font-black text-slate-800">$ {rentAmount.toLocaleString()}</p>
+                                        <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase tracking-tighter">Ahorro por resguardo: +$12.450</p>
+                                    </div>
+                                    <button onClick={() => setView('exito_pago')} className="bg-[#0D1B4B] text-white px-6 py-3 rounded font-black text-[10px] uppercase tracking-widest shadow-xl">Pagar</button>
+                                </div>
+                            </div>
+
+                            {/* ADELANTO BLINDATO (LOGICA V63) */}
+                            {unblindedCapital < 100000 && (
+                                <div className="mp-card p-5 bg-slate-900 text-white relative overflow-hidden">
+                                    <Icon name="zap" size={60} className="absolute right-[-10px] top-[-10px] opacity-10" />
+                                    <h4 className="text-sm font-bold mb-1 tracking-tight">Adelanto por Score Platinum</h4>
+                                    <p className="text-[10px] text-white/50 mb-4 leading-tight">¿No llegas a blindar Mayo? Te adelantamos el alquiler en 1 clic.</p>
+                                    <button className="w-full bg-white text-slate-900 py-3 rounded font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">Solicitar Préstamo</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 3. RANKING HIPOTECARIO */}
+                        <div className="mp-card p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Icon name="home" /></div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 leading-tight">Tu próxima casa</h3>
+                                    <p className="text-xs text-slate-400 font-medium italic">82% de calificación hipotecaria</p>
+                                </div>
+                            </div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-full progress-bar w-[82%] shadow-[0_0_10px_rgba(0,85,221,0.3)]"></div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: MI PERFIL (V63 FULL) ---
+            const PerfilView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-100">
+                        <h2 className="text-lg font-bold text-slate-800 tracking-tight">Usuario</h2>
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="x" size={24}/></button>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+                        {/* Identidad de Marca */}
+                        <div className="flex items-center gap-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <div className="w-20 h-20 rounded-full border-2 border-[#0055DD] p-1 bg-white overflow-hidden shadow-lg">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" className="w-full h-full rounded-full object-cover" />
+                            </div>
+                            <div><h3 className="text-xl font-black text-slate-800 leading-none mb-1 tracking-tighter">Marcos Galperin</h3><p className="text-xs text-slate-400 font-medium tracking-tight">marcos.g@email.com</p></div>
+                        </div>
+
+                        {/* Mis Activos y Cambio de Rol */}
+                        <section>
+                            <div className="flex justify-between items-center mb-4 px-1">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mis Activos y Roles</h4>
+                                <button onClick={() => setView('add_property')} className="text-[#0055DD] text-[10px] font-black uppercase flex items-center gap-1"><Icon name="plus-circle" size={14}/> Agregar</button>
+                            </div>
+                            <div className="space-y-3">
+                                {properties.map((p, i) => (
+                                    <div key={i} className="p-4 bg-white border border-slate-100 rounded-xl flex justify-between items-center hover:border-[#0055DD] transition-all cursor-pointer group">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-slate-50 text-slate-300 group-hover:text-[#0055DD] rounded flex items-center justify-center border border-slate-50"><Icon name="home" size={18}/></div>
+                                            <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{p.address}</p><p className="text-[9px] text-slate-400 font-bold uppercase">{p.role}</p></div>
+                                        </div>
+                                        <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">{p.status}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="space-y-2 pb-10">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Configuración y Seguridad</h4>
+                            <button className="w-full bg-slate-50 p-5 border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex justify-between items-center active:bg-white"><div className="flex items-center gap-4"><Icon name="key" className="text-slate-300"/> Resetear Clave de Acceso</div> <Icon name="chevron-right" size={16}/></button>
+                            <button className="w-full bg-red-50 p-5 border border-red-100 rounded-xl text-left text-sm font-black text-red-600 flex justify-between items-center mt-10 active:opacity-60 transition-opacity"><div className="flex items-center gap-4"><Icon name="user-x" /> Cancelar mi cuenta</div></button>
+                        </section>
+                    </div>
+                </div>
+            );
+
+            // --- VISTA: AGREGAR PROPIEDAD ---
+            const AddPropertyView = () => {
+                const [selRole, setSelRole] = useState(null);
+                return (
+                    <div className="flex flex-col h-full bg-white animate-in">
+                        <header className="p-6 pt-12 flex items-center gap-4 border-b border-slate-50">
+                            <button onClick={() => setView('perfil')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="arrow-left" /></button>
+                            <h2 className="text-lg font-bold text-slate-800 uppercase tracking-tight">Nueva Propiedad</h2>
+                        </header>
+                        <main className="flex-1 p-8 space-y-8">
+                            <div className="text-center"><h3 className="text-xl font-black text-slate-800">¿Qué rol tendrás aquí?</h3><p className="text-sm text-slate-400 mt-2">Personalizaremos el alta según tu necesidad.</p></div>
+                            <div className="space-y-4">
+                                <button onClick={() => setSelRole('prop')} className={`w-full p-6 border-2 rounded-2xl flex items-center gap-5 transition-all ${selRole === 'prop' ? 'border-[#0055DD] bg-blue-50' : 'border-slate-50'}`}>
+                                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selRole === 'prop' ? 'bg-[#0055DD] text-white' : 'bg-slate-100 text-slate-300'}`}><Icon name="shield" size={32}/></div>
+                                    <div className="text-left"><p className="font-black text-slate-800 uppercase text-sm">Soy Propietario</p><p className="text-xs text-slate-400">Cobrar alquiler de mi unidad.</p></div>
+                                </button>
+                                <button onClick={() => setSelRole('inq')} className={`w-full p-6 border-2 rounded-2xl flex items-center gap-5 transition-all ${selRole === 'inq' ? 'border-[#0055DD] bg-blue-50' : 'border-slate-50'}`}>
+                                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selRole === 'inq' ? 'bg-[#0055DD] text-white' : 'bg-slate-100 text-slate-300'}`}><Icon name="user" size={32}/></div>
+                                    <div className="text-left"><p className="font-black text-slate-800 uppercase text-sm">Soy Inquilino</p><p className="text-xs text-slate-400">Vincularme con QR inmobiliario.</p></div>
+                                </button>
+                            </div>
+                            {selRole === 'inq' && <button onClick={() => handleTransition('inicio')} className="w-full bg-[#0D1B4B] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3"><Icon name="qr-code" size={18}/> ESCANEAR QR CONTRATO</button>}
+                            {selRole === 'prop' && <button className="w-full bg-[#0055DD] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3"><Icon name="upload" size={18}/> CARGAR ESCRITURA</button>}
+                        </main>
+                    </div>
+                );
+            };
+
+            // --- VISTA: MOVIMIENTOS ---
+            const MovimientosView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-5 pt-12 flex items-center gap-4 border-b border-slate-50">
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="arrow-left" /></button>
+                        <h2 className="text-lg font-bold text-slate-800">Actividad</h2>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                        <div className="relative"><Icon name="search" className="absolute left-3 top-3.5 text-slate-300" size={16}/><input type="text" placeholder="Busca una operación" className="w-full bg-slate-50 p-3.5 pl-10 rounded-xl text-sm outline-none border border-slate-100 focus:border-[#0055DD]"/></div>
+                        <div className="space-y-6">
+                            {[
+                                { t: "Pago Alquiler", s: "- $ 450.000", desc: "Abril 2026 - Caseros 1230", icon: "key", color: "text-red-500" },
+                                { t: "Rendimiento Blindaje", s: "+ $ 1.240", desc: "Rendimiento diario", icon: "trending-up", color: "text-emerald-500" },
+                                { t: "Depósito Recibido", s: "+ $ 150.000", desc: "Desde Alias propio", icon: "plus", color: "text-emerald-500" },
+                                { t: "Blindaje Mayo", s: "Asegurado", desc: "Cierre de resguardo", icon: "shield-check", color: "text-[#0055DD]" }
+                            ].map((m, i) => (
+                                <div key={i} className="flex justify-between items-center active:opacity-60 transition-opacity cursor-pointer">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 bg-slate-50 rounded flex items-center justify-center text-slate-400 border border-slate-100"><Icon name={m.icon} size={22}/></div>
+                                        <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{m.t}</p><p className="text-[10px] text-slate-400 uppercase font-medium">{m.desc}</p></div>
+                                    </div>
+                                    <p className={`text-sm font-black ${m.color}`}>{m.s}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            // --- VISTA: EXITO PAGO ---
+            const ExitoPagoView = () => (
+                <div className="flex flex-col h-full success-bg text-white items-center justify-center p-10 text-center animate-in">
+                    <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center mb-8 shadow-2xl">
+                        <Icon name="star" size={56} className="text-[#10B981] fill-[#10B981]" />
+                    </div>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">¡ALQUILER PAGADO!</h1>
+                    <p className="text-emerald-50 font-medium mb-12">Usaste tu blindaje de Abril con éxito. <br/> Ganaste <strong>+500 Millas</strong> de reputación.</p>
+                    <button onClick={() => setView('inicio')} className="w-full bg-white text-emerald-700 py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl">Volver al Inicio</button>
+                </div>
+            );
+
+            // --- NAVEGACIÓN ---
+            return (
+                <div className="mobile-shell flex flex-col">
+                    {/* Notch Superior */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black/10 rounded-b-3xl z-[150] flex items-center justify-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40"></div>
+                        <div className="w-10 h-1 bg-white/40 rounded-full"></div>
+                    </div>
+
+                    {view === 'inicio' && <InicioView />}
+                    {view === 'movimientos' && <MovimientosView />}
+                    {view === 'perfil' && <PerfilView />}
+                    {view === 'exito_pago' && <ExitoPagoView />}
+                    {view === 'add_property' && <AddPropertyView />}
+
+                    {isScanning && (
+                        <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-[200] flex flex-col items-center justify-center animate-in">
+                            <div className="w-16 h-16 border-4 border-[#0055DD] border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <p className="text-xs font-black text-[#0055DD] uppercase tracking-widest">Sincronizando...</p>
+                        </div>
+                    )}
+
+                    {/* MARCO INFERIOR (TAB BAR) */}
+                    {['inicio', 'movimientos', 'perfil'].includes(view) && (
+                        <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 h-20 flex justify-around items-center px-2 z-[90] shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                            <div onClick={() => setView('inicio')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'inicio' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="home" size={24} strokeWidth={view === 'inicio' ? 3 : 2} />
+                                <span className="text-[10px] font-bold">Inicio</span>
+                            </div>
+                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'movimientos' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="list" size={24} />
+                                <span className="text-[10px] font-bold">Actividad</span>
+                            </div>
+                            <div className="flex-1 flex justify-center">
+                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-50 -translate-y-4 active:scale-90 transition-transform">
+                                    <Icon name="shield-check" size={30} className="text-[#0055DD]" strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center gap-1 flex-1 text-slate-300">
+                                <Icon name="tag" size={24} />
+                                <span className="text-[10px] font-bold">Boutique</span>
+                            </div>
+                            <div onClick={() => setView('perfil')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'perfil' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="user" size={24} />
+                                <span className="text-[10px] font-bold">Más</span>
+                            </div>
+                        </nav>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DptoLibreApp />);
+    </script>
+</body>
+</html>
