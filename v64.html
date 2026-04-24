@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DptoLibre - Sistema de Tickets V64</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --brand-blue: #0055DD;
+            --brand-cyan: #00D1FF;
+            --bg-white: #ffffff;
+            --card-gray: #F8FAFC;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #cbd5e1;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+
+        .mobile-shell {
+            width: 100%;
+            height: 100vh;
+            max-width: 414px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+        }
+
+        .dl-card {
+            background: var(--card-gray);
+            border-radius: 6px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #0055DD 0%, #00D1FF 100%);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        
+        .success-bg { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { window.lucide && window.lucide.createIcons(); }, [name, size, className]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        function DptoLibreApp() {
+            const [view, setView] = useState('inicio'); // inicio, movimientos, perfil, tickets, nuevo_ticket
+            const [activeRole, setActiveRole] = useState('Inquilino');
+            
+            // Mock Data
+            const [balance, setBalance] = useState(905430);
+            const aportePropio = 893000;
+            const gananciaIntereses = 12430.22;
+            const score = 875;
+            
+            const properties = [
+                { address: "Caseros 1230, 4B", role: "Inquilino", status: "Activo" },
+                { address: "Av. Colón 450, 10C", role: "Propietario", status: "Alquilada" }
+            ];
+
+            const tickets = [
+                { id: 1, title: "Humedad baño principal", cat: "Plomería", status: "En Revisión", date: "15 Abr" },
+                { id: 2, title: "Termotanque no calienta", cat: "Gas", status: "Autorizado", date: "10 Abr" }
+            ];
+
+            // --- VISTA: INICIO ---
+            const InicioView = () => (
+                <div className="flex flex-col h-full animate-in">
+                    <header className="bg-white px-5 pt-12 pb-6 flex justify-between items-center">
+                        <div onClick={() => setView('perfil')} className="flex items-center gap-3 cursor-pointer group active:opacity-70 transition-opacity">
+                            <div className="w-11 h-11 rounded-full border-2 border-[#0055DD] overflow-hidden shadow-md">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" alt="Perfil" />
+                            </div>
+                            <div className="flex flex-col">
+                                <p className="text-sm font-bold text-slate-800 leading-none">Marcos Galperin <Icon name="chevron-right" size={14} className="inline opacity-40"/></p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Icon name="sparkles" size={10} className="text-amber-500" />
+                                    <span className="text-[10px] font-semibold text-slate-500">4.500 Millas • Platinum</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 text-slate-400">
+                            <button onClick={() => alert("Score Compartido")}><Icon name="share-2" size={22} /></button>
+                            <Icon name="bell" size={22} />
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto no-scrollbar pb-32">
+                        <div className="px-5 mb-6">
+                            <div className="dl-card p-6 shadow-sm">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">Billetera Blindato</p>
+                                    <div className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded uppercase">Rinde 81% anual</div>
+                                </div>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <h2 className="text-4xl font-black text-slate-900 tracking-tighter">$ {balance.toLocaleString()}</h2>
+                                    <Icon name="eye" size={20} className="text-slate-200" />
+                                </div>
+                                <div className="mt-4 flex gap-4 border-t border-slate-100 pt-4">
+                                    <div className="flex-1"><p className="text-[8px] font-black text-slate-400 uppercase">Tus aportes</p><p className="text-sm font-bold text-slate-700">${aportePropio.toLocaleString()}</p></div>
+                                    <div className="w-[1px] bg-slate-100 h-6 mt-1"></div>
+                                    <div className="flex-1"><p className="text-[8px] font-black text-slate-400 uppercase">Ganancia</p><p className="text-sm font-black text-emerald-600">+${gananciaIntereses.toLocaleString()}</p></div>
+                                </div>
+                                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Icon name="shield-check" className="text-[#0055DD]" size={24} />
+                                        <div><p className="text-xs font-black text-[#0055DD] uppercase">2 meses blindados</p><p className="text-[9px] text-indigo-400 font-bold">Mayo y Junio protegidos</p></div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 mt-6">
+                                    <div className="flex-1 py-4 bg-[#0055DD] text-white rounded font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all cursor-pointer"><Icon name="plus" size={16} /> Ingresar</div>
+                                    <div className="flex-1 py-4 bg-white border border-slate-200 text-slate-400 rounded font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"><Icon name="arrow-up-right" size={16} /> Retirar</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-5 mb-8">
+                            <div className="dl-card p-6"><div className="flex items-center gap-3 mb-4"><div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Icon name="home" /></div><div><h3 className="text-sm font-bold text-slate-800 leading-tight">Ranking Hipotecario</h3><p className="text-xs text-slate-400 font-medium italic">82% de confianza para tu casa propia</p></div></div><div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner"><div className="h-full progress-bar w-[82%] shadow-[0_0_10px_rgba(0,85,221,0.3)]"></div></div></div>
+                        </div>
+
+                        <div className="px-5 grid grid-cols-4 gap-y-6 pb-10">
+                            {[
+                                { label: 'Movimientos', icon: 'list-ordered', action: () => setView('movimientos') },
+                                { label: 'Tickets', icon: 'wrench', action: () => setView('tickets') },
+                                { label: 'Bitácora', icon: 'camera' },
+                                { label: 'Perfil', icon: 'user', action: () => setView('perfil') }
+                            ].map((s, i) => (
+                                <div key={i} onClick={s.action} className="flex flex-col items-center gap-2 cursor-pointer active:opacity-50 transition-opacity">
+                                    <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shadow-sm"><Icon name={s.icon} size={24}/></div>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{s.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: TICKETS (LISTADO Y GESTIÓN) ---
+            const TicketsView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="arrow-left" /></button>
+                            <h2 className="text-xl font-black text-slate-800 tracking-tight">Gestión de Hogar</h2>
+                        </div>
+                        <button onClick={() => setView('nuevo_ticket')} className="bg-[#0055DD] text-white p-2 rounded-xl shadow-lg active:scale-90 transition-all">
+                            <Icon name="plus" size={24} />
+                        </button>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                        <div className="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-100 flex gap-4">
+                            <Icon name="info" className="text-indigo-600 shrink-0" size={24} />
+                            <p className="text-[11px] text-indigo-700 font-bold leading-relaxed">
+                                Reporta cualquier avería con evidencia multimedia. Blindato orquestará el presupuesto con la inmobiliaria y el dueño.
+                            </p>
+                        </div>
+
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tickets Recientes</h3>
+                        
+                        <div className="space-y-3">
+                            {tickets.map(t => (
+                                <div key={t.id} className="dl-card p-4 flex items-center justify-between group active:bg-slate-100 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-50">
+                                            <Icon name={t.cat === 'Plomería' ? 'droplets' : 'zap'} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800">{t.title}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{t.cat} • {t.date}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-[9px] font-black px-2 py-1 rounded uppercase ${t.status === 'Autorizado' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {t.status}
+                                        </span>
+                                        <Icon name="chevron-right" className="ml-2 text-slate-200 inline" size={16} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: NUEVO TICKET (PASO A PASO) ---
+            const NuevoTicketView = () => {
+                const [step, setStep] = useState(1); // 1: Categoria, 2: Multimedia, 3: Gastos/Enviar
+                
+                return (
+                    <div className="flex flex-col h-full bg-white animate-in">
+                        <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
+                            <button onClick={() => setView('tickets')} className="p-2 text-slate-400"><Icon name="x" size={24} /></button>
+                            <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Reportar Problema</h2>
+                            <div className="w-8"></div>
+                        </header>
+
+                        <main className="flex-1 overflow-y-auto no-scrollbar p-6">
+                            {/* STEP 1: CATEGORIA */}
+                            {step === 1 && (
+                                <div className="space-y-6 animate-in">
+                                    <h3 className="text-xl font-black text-slate-800">¿Qué tipo de problema es?</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {['Plomería', 'Gas', 'Electricidad', 'Cerrajería', 'Pintura', 'Otros'].map(cat => (
+                                            <button key={cat} onClick={() => setStep(2)} className="dl-card p-6 flex flex-col items-center gap-3 active:border-[#0055DD] transition-all">
+                                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center border border-slate-100 shadow-sm text-[#0055DD]">
+                                                    <Icon name={cat === 'Plomería' ? 'droplets' : cat === 'Gas' ? 'flame' : cat === 'Electricidad' ? 'zap' : 'wrench'} size={24} />
+                                                </div>
+                                                <span className="text-[11px] font-black uppercase text-slate-600">{cat}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STEP 2: MULTIMEDIA */}
+                            {step === 2 && (
+                                <div className="space-y-8 animate-in">
+                                    <h3 className="text-xl font-black text-slate-800 leading-tight">Captura la evidencia del problema</h3>
+                                    <p className="text-sm text-slate-500 font-medium">Esto es vital para que el dueño autorice el presupuesto rápido.</p>
+                                    
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <button className="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+                                            <div className="w-full aspect-square dl-card flex items-center justify-center text-[#0055DD] group-hover:bg-blue-50">
+                                                <Icon name="camera" size={32} />
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase">Foto</span>
+                                        </button>
+                                        <button className="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+                                            <div className="w-full aspect-square dl-card flex items-center justify-center text-red-500 group-hover:bg-red-50">
+                                                <Icon name="video" size={32} />
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase">Video</span>
+                                        </button>
+                                        <button className="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+                                            <div className="w-full aspect-square dl-card flex items-center justify-center text-indigo-500 group-hover:bg-indigo-50">
+                                                <Icon name="mic" size={32} />
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase">Audio</span>
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Descripción breve</label>
+                                        <textarea placeholder="Ej: La canilla de la cocina gotea constantemente..." className="w-full bg-slate-50 border-none p-5 rounded-xl text-sm font-medium mt-2 outline-none focus:ring-2 focus:ring-[#0055DD]" rows="4"></textarea>
+                                    </div>
+
+                                    <button onClick={() => setStep(3)} className="w-full py-4 bg-[#0D1B4B] text-white rounded font-black text-[11px] uppercase tracking-widest shadow-xl">Continuar</button>
+                                </div>
+                            )}
+
+                            {/* STEP 3: GASTOS Y ENVÍO */}
+                            {step === 3 && (
+                                <div className="space-y-6 animate-in">
+                                    <h3 className="text-xl font-black text-slate-800 leading-tight">Presupuesto y Materiales</h3>
+                                    <p className="text-sm text-slate-500 font-medium italic">Opcional: Si ya tienes el costo del arreglo puedes cargarlo aquí.</p>
+                                    
+                                    <div className="space-y-4">
+                                        <div className="p-5 dl-card flex items-center justify-between group active:bg-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-100 text-slate-400"><Icon name="file-text" /></div>
+                                                <p className="text-xs font-bold text-slate-700 uppercase">Cargar Presupuesto</p>
+                                            </div>
+                                            <Icon name="plus-circle" className="text-[#0055DD]" />
+                                        </div>
+                                        <div className="p-5 dl-card flex items-center justify-between group active:bg-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-100 text-slate-400"><Icon name="receipt" /></div>
+                                                <p className="text-xs font-bold text-slate-700 uppercase">Ticket de Materiales</p>
+                                            </div>
+                                            <Icon name="plus-circle" className="text-[#0055DD]" />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-amber-50 p-5 rounded-xl border border-amber-100 flex gap-4 mt-8">
+                                        <Icon name="alert-triangle" className="text-amber-600 shrink-0" size={24} />
+                                        <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
+                                            Al enviar, la inmobiliaria recibirá tu solicitud de autorización. Si el dueño aprueba, el gasto se neteará del próximo alquiler.
+                                        </p>
+                                    </div>
+
+                                    <button onClick={() => { alert("Ticket enviado para autorización"); setView('tickets'); }} className="w-full py-5 bg-[#0055DD] text-white rounded font-black text-[12px] uppercase tracking-widest shadow-xl shadow-blue-100">Enviar para Autorizar</button>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+                );
+            };
+
+            // --- VISTAS: MOVIMIENTOS Y PERFIL (MANTENIDAS DE V63) ---
+            const MovimientosView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-5 pt-12 flex items-center gap-4 border-b border-slate-50">
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="arrow-left" /></button>
+                        <h2 className="text-lg font-bold text-slate-800">Tu actividad</h2>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                        <div className="relative"><Icon name="search" className="absolute left-3 top-3.5 text-slate-300" size={16}/><input type="text" placeholder="Busca una operación" className="w-full bg-slate-50 p-3.5 pl-10 rounded-xl text-sm outline-none border border-slate-100 focus:border-[#0055DD]"/></div>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abril 2026</h3>
+                        <div className="space-y-6">
+                            {[
+                                { t: "Pago de Alquiler", s: "- $ 450.000", desc: "Caseros 1230 - Abril", icon: "key", color: "text-red-500" },
+                                { t: "Intereses Blindado", s: "+ $ 1.240", desc: "Rendimiento diario", icon: "trending-up", color: "text-emerald-500" }
+                            ].map((m, i) => (
+                                <div key={i} className="flex justify-between items-center active:opacity-60 transition-opacity cursor-pointer">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 bg-slate-50 rounded flex items-center justify-center text-slate-400 border border-slate-100"><Icon name={m.icon} size={22}/></div>
+                                        <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{m.t}</p><p className="text-[10px] text-slate-400 uppercase font-medium">{m.desc}</p></div>
+                                    </div>
+                                    <p className={`text-sm font-black ${m.color}`}>{m.s}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const PerfilView = () => (
+                <div className="flex flex-col h-full bg-[#F8FAFC] animate-in">
+                    <header className="p-6 pt-12 flex justify-between items-center bg-white border-b border-slate-100">
+                        <h2 className="text-lg font-bold text-slate-800 tracking-tight">Mi Perfil</h2>
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="x" size={24}/></button>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+                        <div className="flex items-center gap-4 bg-white p-6 rounded shadow-sm border border-slate-100">
+                            <div className="w-20 h-20 rounded-full border-2 border-[#0055DD] p-1 bg-white overflow-hidden shadow-lg"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" className="w-full h-full rounded-full object-cover" /></div>
+                            <div><h3 className="text-xl font-black text-slate-800 leading-none mb-1 tracking-tighter">Marcos Galperin</h3><p className="text-xs text-slate-400 font-medium tracking-tight">marcos.g@mercadolibre.com</p></div>
+                        </div>
+                        <section>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Mis Activos</h4>
+                            <div className="space-y-2">
+                                {properties.map((p, i) => (
+                                    <div key={i} className="p-4 bg-white border border-slate-100 rounded flex justify-between items-center">
+                                        <div className="flex items-center gap-3"><div className="w-10 h-10 bg-slate-50 text-[#0055DD] rounded flex items-center justify-center border border-slate-50"><Icon name="home" size={18}/></div><div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{p.address}</p><p className="text-[9px] text-slate-400 font-bold uppercase">{p.role}</p></div></div>
+                                        <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">{p.status}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="mobile-shell flex flex-col">
+                    {/* Notch Superior */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black/5 rounded-b-3xl z-[150] flex items-center justify-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40"></div>
+                        <div className="w-10 h-1 bg-white/40 rounded-full"></div>
+                    </div>
+
+                    {/* Vistas Principales */}
+                    {view === 'inicio' && <InicioView />}
+                    {view === 'movimientos' && <MovimientosView />}
+                    {view === 'perfil' && <PerfilView />}
+                    {view === 'tickets' && <TicketsView />}
+                    {view === 'nuevo_ticket' && <NuevoTicketView />}
+
+                    {/* BOTTOM NAV ESTILO MP (Solo en Dashboard y Movimientos) */}
+                    {['inicio', 'movimientos', 'tickets'].includes(view) && (
+                        <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 h-20 flex justify-around items-center px-2 z-[90] shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                            <div onClick={() => setView('inicio')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'inicio' ? 'text-[#0055DD] font-black' : 'text-slate-300 font-medium'}`}>
+                                <Icon name="home" size={24} strokeWidth={view === 'inicio' ? 3 : 2} />
+                                <span className="text-[10px]">Inicio</span>
+                            </div>
+                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'movimientos' ? 'text-[#0055DD] font-black' : 'text-slate-300 font-medium'}`}>
+                                <Icon name="file-search" size={24} strokeWidth={view === 'movimientos' ? 3 : 2} />
+                                <span className="text-[10px]">Actividad</span>
+                            </div>
+                            <div className="flex-1 flex justify-center">
+                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-50 -translate-y-4 active:scale-90 transition-transform">
+                                    <Icon name="shield-check" size={30} className="text-[#0055DD]" strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div onClick={() => setView('tickets')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'tickets' ? 'text-[#0055DD] font-black' : 'text-slate-300 font-medium'}`}>
+                                <Icon name="wrench" size={24} strokeWidth={view === 'tickets' ? 3 : 2} />
+                                <span className="text-[10px]">Tickets</span>
+                            </div>
+                            <div onClick={() => setView('perfil')} className="flex flex-col items-center gap-1 flex-1 text-slate-300 cursor-pointer active:scale-110">
+                                <Icon name="menu" size={24} />
+                                <span className="text-[10px] font-medium">Más</span>
+                            </div>
+                        </nav>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DptoLibreApp />);
+    </script>
+</body>
+</html>
