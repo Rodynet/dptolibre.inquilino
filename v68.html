@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DptoLibre - Sistema Operativo V68</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        :root { --brand-blue: #0055DD; --brand-cyan: #00D1FF; --bg-white: #ffffff; --card-gray: #F8FAFC; }
+        body { font-family: 'Inter', sans-serif; background-color: #cbd5e1; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        .mobile-shell { width: 100%; height: 100vh; max-width: 414px; margin: 0 auto; background: var(--bg-white); position: relative; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.2); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .mp-card { background: var(--card-gray); border-radius: 6px; border: 1px solid #f1f5f9; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .progress-bar { background: linear-gradient(90deg, #0055DD 0%, #00D1FF 100%); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        .success-bg { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { window.lucide && window.lucide.createIcons(); }, [name, size, className]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        function DptoLibreApp() {
+            // VISTAS: inicio, movimientos, administracion, tickets, nuevo_ticket, deposito_blindado, exito_pago
+            const [view, setView] = useState('inicio'); 
+            const [isScanning, setIsScanning] = useState(false);
+            
+            // Mock de Negocio
+            const rentAmount = 450000;
+            const [balanceTotal, setBalanceTotal] = useState(985430); 
+            const [interestEarned, setInterestEarned] = useState(12430);
+            const aportePropio = balanceTotal - interestEarned;
+            
+            // Lógica de Blindaje
+            const blindedMonthsCount = Math.floor(aportePropio / rentAmount);
+            const blindedCapital = blindedMonthsCount * rentAmount;
+            const unblindedCapital = balanceTotal - blindedCapital - interestEarned;
+            const missingForNext = rentAmount - unblindedCapital;
+
+            // Mock de tickets e historial
+            const [tickets, setTickets] = useState([
+                { id: 1, title: "Humedad baño principal", cat: "Plomería", status: "En Revisión", date: "15 Abr" }
+            ]);
+
+            const handleDeposit = (amount) => {
+                setBalanceTotal(prev => prev + amount);
+                setView('inicio');
+            };
+
+            // --- VISTA: INICIO (DASHBOARD) ---
+            const InicioView = () => (
+                <div className="flex flex-col h-full animate-in">
+                    <header className="bg-white px-5 pt-12 pb-4 flex justify-between items-center border-b border-slate-50">
+                        <div onClick={() => setView('administracion')} className="flex items-center gap-3 cursor-pointer active:opacity-60 transition-opacity">
+                            <div className="w-10 h-10 rounded-full border-2 border-[#0055DD] overflow-hidden shadow-sm bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop" alt="User" />
+                            </div>
+                            <div className="flex flex-col">
+                                <p className="text-sm font-bold text-slate-800 leading-none tracking-tight">Marcos Galperin <Icon name="chevron-right" size={14} className="inline opacity-30"/></p>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Icon name="award" size={10} className="text-amber-500" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Platinum • 875 pts</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => alert("Score compartido!")} className="text-slate-300 active:text-[#0055DD] transition-colors"><Icon name="share-2" size={20} /></button>
+                            <button className="text-slate-300 relative"><Icon name="bell" size={20} /><div className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div></button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6 pb-32">
+                        
+                        {/* 1. BILLETERA DE COMPOSICIÓN (LOGICA DE DEPÓSITO) */}
+                        <div onClick={() => setView('deposito_blindado')} className="mp-card p-6 shadow-sm border border-slate-100 cursor-pointer active:scale-[0.98] transition-transform">
+                            <div className="flex justify-between items-center mb-1">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Mi Billetera Blindato</p>
+                                <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded uppercase">Inversión T+0</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">$ {balanceTotal.toLocaleString()}</h2>
+                                <Icon name="eye" size={20} className="text-slate-200" />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-slate-100">
+                                <div><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Blindado</p><p className="text-xs font-bold text-slate-700">${blindedCapital.toLocaleString()}</p></div>
+                                <div><p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">Intereses</p><p className="text-xs font-bold text-emerald-600">+${interestEarned.toLocaleString()}</p></div>
+                                <div><p className="text-[8px] font-black text-red-400 uppercase leading-none mb-1 italic">Sin guardar</p><p className="text-xs font-bold text-slate-700">${unblindedCapital.toLocaleString()}</p></div>
+                            </div>
+
+                            <div className="mt-6 p-4 bg-indigo-50/50 border border-indigo-100/50 rounded flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Icon name="shield-check" className="text-[#0055DD]" size={24} />
+                                    <div>
+                                        <p className="text-xs font-black text-[#0055DD] uppercase">Tienes {blindedMonthsCount} meses blindados</p>
+                                        <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-tight">Mayo y Junio protegidos</p>
+                                    </div>
+                                </div>
+                                <Icon name="chevron-right" size={14} className="text-indigo-200" />
+                            </div>
+
+                            <div className="flex gap-4 mt-6">
+                                <div className="flex-1 flex flex-col items-center gap-2">
+                                    <button onClick={(e) => { e.stopPropagation(); setView('deposito_blindado'); }} className="w-full py-4 bg-[#0055DD] text-white rounded font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-blue-50">
+                                        <Icon name="plus" size={16} /> Ingresar
+                                    </button>
+                                    <span className="text-[8px] font-black text-amber-500 uppercase">Suma 50 puntos</span>
+                                </div>
+                                <div className="flex-1 flex flex-col items-center gap-2">
+                                    <button className="w-full py-4 bg-white border border-slate-200 text-slate-400 rounded font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                                        <Icon name="arrow-up-right" size={16} /> Retirar
+                                    </button>
+                                    <span className="text-[8px] font-black text-red-400 uppercase tracking-tighter">Pierdes racha</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. ALQUILER Y ADELANTO */}
+                        <div className="space-y-4">
+                            <div className="mp-card p-5 border-l-4 border-l-[#0055DD]">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Próximo Alquiler</p>
+                                        <h4 className="text-lg font-bold text-slate-800 leading-none">Caseros 1230, 4B</h4>
+                                        <p className="text-xs text-slate-400 mt-1">Vence en 4 días (05/05)</p>
+                                    </div>
+                                    <span className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded uppercase">BLINDADO</span>
+                                </div>
+                                <div className="flex items-end justify-between border-t border-slate-50 pt-5">
+                                    <div>
+                                        <p className="text-2xl font-black text-slate-800">$ 450.000</p>
+                                        <p className="text-[10px] font-bold text-emerald-500 mt-1 uppercase tracking-tighter">Ahorro resguardo: +$12.450</p>
+                                    </div>
+                                    <button onClick={() => setView('exito_pago')} className="bg-[#0D1B4B] text-white px-6 py-3 rounded font-black text-[10px] uppercase tracking-widest shadow-xl">Pagar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. RANKING HIPOTECARIO */}
+                        <div className="mp-card p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Icon name="home" /></div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 leading-tight tracking-tight uppercase">Misión: Mi Propia Casa</h3>
+                                    <p className="text-xs text-slate-400 font-medium italic">82% de calificación hipotecaria</p>
+                                </div>
+                            </div>
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                <div className="h-full progress-bar w-[82%] shadow-[0_0_10px_rgba(0,85,221,0.3)]"></div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: MAGO DE DEPÓSITO (BLINDAJE DINÁMICO) ---
+            const DepositWizard = () => {
+                const [inputAmount, setInputAmount] = useState("");
+                const numAmount = parseFloat(inputAmount) || 0;
+                const willCompleteCurrent = numAmount >= missingForNext;
+                const remainderForNext = (numAmount > missingForNext) ? (rentAmount - ((numAmount - missingForNext) % rentAmount)) : (missingForNext - numAmount);
+
+                return (
+                    <div className="flex flex-col h-full bg-white animate-in">
+                        <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
+                            <button onClick={() => setView('inicio')} className="p-2 text-slate-400"><Icon name="arrow-left" /></button>
+                            <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">Ingresar Dinero</h2>
+                            <div className="w-8"></div>
+                        </header>
+                        <main className="flex-1 p-8 space-y-8 overflow-y-auto no-scrollbar">
+                            <div className="text-center">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Monto a Blindar</p>
+                                <div className="flex items-center justify-center gap-1">
+                                    <span className="text-3xl font-black text-slate-300">$</span>
+                                    <input 
+                                        type="number" 
+                                        value={inputAmount}
+                                        onChange={(e) => setInputAmount(e.target.value)}
+                                        placeholder={missingForNext.toString()}
+                                        className="text-5xl font-black text-slate-800 border-none outline-none w-full max-w-[200px] text-center focus:ring-0"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+
+                            {/* FeedBack de Blindaje */}
+                            <div className={`p-6 rounded-[2rem] border-2 transition-all ${willCompleteCurrent ? 'bg-emerald-50 border-emerald-200' : 'bg-indigo-50 border-indigo-100'}`}>
+                                {willCompleteCurrent ? (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <Icon name="party-popper" className="text-emerald-600" />
+                                            <p className="text-sm font-black text-emerald-800 uppercase">¡Excelente Movimiento!</p>
+                                        </div>
+                                        <p className="text-xs text-emerald-700 leading-relaxed font-medium">
+                                            Con este monto completas el blindaje del mes actual y ganas <strong>+100 puntos</strong> de score.
+                                        </p>
+                                        <div className="pt-2 border-t border-emerald-200">
+                                            <p className="text-[10px] font-black text-emerald-600 uppercase">Siguiente Mes:</p>
+                                            <p className="text-[11px] text-emerald-700">Te faltarán solo <strong>${remainderForNext.toLocaleString()}</strong> para blindar un mes adicional.</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <Icon name="info" className="text-indigo-600" />
+                                            <p className="text-xs font-black text-indigo-800 uppercase tracking-tighter">Falta para completar el mes</p>
+                                        </div>
+                                        <p className="text-xs text-indigo-700 leading-relaxed">
+                                            Te faltan <strong>${(missingForNext - numAmount).toLocaleString()}</strong> para blindar el mes completo y asegurar tu vivienda.
+                                        </p>
+                                        <button onClick={() => setInputAmount(missingForNext.toString())} className="text-[9px] font-black text-[#0055DD] uppercase underline">Cargar monto faltante</button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Icon name="landmark" className="text-slate-400" />
+                                    <div><p className="text-[9px] font-black text-slate-400 uppercase">Desde tu cuenta asociada</p><p className="text-xs font-bold text-slate-700">Banco Galicia (*** 8901)</p></div>
+                                </div>
+                                <Icon name="chevron-right" size={16} className="text-slate-300" />
+                            </div>
+                        </main>
+                        <footer className="p-6 bg-white border-t border-slate-50">
+                            <button onClick={() => handleDeposit(numAmount)} className="w-full py-5 bg-[#0055DD] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Confirmar e Ingresar</button>
+                        </footer>
+                    </div>
+                );
+            };
+
+            // --- VISTA: TICKETS (LISTADO Y GESTIÓN) ---
+            const TicketsView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="arrow-left" /></button>
+                            <h2 className="text-xl font-black text-slate-800 tracking-tight">Gestión de Hogar</h2>
+                        </div>
+                        <button onClick={() => setView('nuevo_ticket')} className="bg-[#0D1B4B] text-white p-2 rounded-xl shadow-lg active:scale-90 transition-all">
+                            <Icon name="plus" size={24} />
+                        </button>
+                    </header>
+                    <main className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                        <div className="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-100 flex gap-4">
+                            <Icon name="info" className="text-indigo-600 shrink-0" size={24} />
+                            <p className="text-[11px] text-indigo-700 font-bold leading-relaxed">Reporta cualquier avería. El sistema enviará la evidencia al Administrador para su autorización rápida.</p>
+                        </div>
+                        <div className="space-y-3">
+                            {tickets.map(t => (
+                                <div key={t.id} className="mp-card p-4 flex items-center justify-between group active:bg-slate-100 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-50 shadow-sm"><Icon name="wrench" /></div>
+                                        <div><p className="text-sm font-bold text-slate-800">{t.title}</p><p className="text-[10px] text-slate-400 font-bold uppercase">{t.cat} • {t.date}</p></div>
+                                    </div>
+                                    <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-2 py-1 rounded uppercase">{t.status}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            );
+
+            // --- VISTA: NUEVO TICKET ---
+            const NuevoTicketView = () => {
+                const [step, setStep] = useState(1); 
+                return (
+                    <div className="flex flex-col h-full bg-white animate-in">
+                        <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
+                            <button onClick={() => setView('tickets')} className="p-2 text-slate-400"><Icon name="x" /></button>
+                            <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest">Reportar Problema</h2>
+                            <div className="w-8"></div>
+                        </header>
+                        <main className="flex-1 overflow-y-auto no-scrollbar p-6">
+                            {step === 1 && (
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black text-slate-800">¿Qué tipo de problema es?</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {['Plomería', 'Gas', 'Electricidad', 'Cerrajería', 'Pintura', 'Otros'].map(cat => (
+                                            <button key={cat} onClick={() => setStep(2)} className="mp-card p-6 flex flex-col items-center gap-3 active:border-[#0055DD]">
+                                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-[#0055DD] border border-slate-100 shadow-sm"><Icon name={cat === 'Plomería' ? 'droplets' : cat === 'Gas' ? 'flame' : 'wrench'} /></div>
+                                                <span className="text-[10px] font-black uppercase text-slate-600">{cat}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {step === 2 && (
+                                <div className="space-y-8 animate-in">
+                                    <h3 className="text-xl font-black text-slate-800">Sube evidencia del daño</h3>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <button className="flex flex-col items-center gap-2"><div className="w-full aspect-square mp-card flex items-center justify-center text-[#0055DD]"><Icon name="camera" size={32} /></div><span className="text-[10px] font-black text-slate-400 uppercase">Foto</span></button>
+                                        <button className="flex flex-col items-center gap-2"><div className="w-full aspect-square mp-card flex items-center justify-center text-red-500"><Icon name="video" size={32} /></div><span className="text-[10px] font-black text-slate-400 uppercase">Video</span></button>
+                                        <button className="flex flex-col items-center gap-2"><div className="w-full aspect-square mp-card flex items-center justify-center text-indigo-500"><Icon name="mic" size={32} /></div><span className="text-[10px] font-black text-slate-400 uppercase">Audio</span></button>
+                                    </div>
+                                    <textarea placeholder="Describe el problema brevemente..." className="w-full bg-slate-50 border-none p-5 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-[#0055DD]" rows="4"></textarea>
+                                    <button onClick={() => { alert("Ticket enviado"); setView('tickets'); }} className="w-full py-4 bg-[#0D1B4B] text-white rounded font-black text-[11px] uppercase tracking-widest shadow-xl">Enviar Reporte</button>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+                );
+            };
+
+            // --- VISTA: ADMINISTRACIÓN (LEGAJO LEGAL) ---
+            const AdministracionView = () => (
+                <div className="flex flex-col h-full bg-[#F8FAFC] animate-in">
+                    <header className="p-6 pt-12 flex justify-between items-center border-b border-slate-100 bg-white">
+                        <h2 className="text-lg font-bold text-slate-800 tracking-tight tracking-tight uppercase">Mi Legajo Legal</h2>
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400"><Icon name="x" size={24}/></button>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+                        {/* Contrato */}
+                        <section>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Documentos Firmados</h4>
+                            <div className="bg-slate-900 p-5 rounded-2xl text-white flex justify-between items-center shadow-lg relative overflow-hidden group">
+                                <Icon name="file-signature" size={60} className="absolute right-[-10px] top-[-10px] opacity-10" />
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center"><Icon name="file-text" size={20}/></div>
+                                    <div><p className="text-sm font-bold tracking-tight">Contrato de Locación</p><p className="text-[10px] text-indigo-300 uppercase font-black">CTR-99021-X • Firmado</p></div>
+                                </div>
+                                <Icon name="download" size={20} className="text-indigo-400" />
+                            </div>
+                        </section>
+
+                        {/* Garantías */}
+                        <section>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Tus Garantías</h4>
+                            <div className="space-y-2">
+                                {[
+                                    { name: "Carlos Pérez", type: "Recibo de Sueldo", status: "Validado" },
+                                    { name: "Marta Gómez", type: "Escritura Propiedad", status: "Aprobado" }
+                                ].map((g, i) => (
+                                    <div key={i} className="p-4 bg-white border border-slate-100 rounded-xl flex justify-between items-center">
+                                        <div className="flex items-center gap-3"><div className="w-10 h-10 bg-slate-50 text-emerald-500 rounded-xl flex items-center justify-center shadow-sm"><Icon name="user-check" size={18}/></div><div><p className="text-sm font-bold text-slate-800">{g.name}</p><p className="text-[10px] text-slate-400 font-bold uppercase">{g.type}</p></div></div>
+                                        <Icon name="check-circle" className="text-emerald-500" size={16} />
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Recibos de Pago */}
+                        <section>
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Recibos por Alquiler</h4>
+                            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+                                {["Marzo 2026", "Febrero 2026"].map((m, i) => (
+                                    <div key={i} className="p-4 border-b border-slate-50 flex justify-between items-center hover:bg-slate-50 transition-colors cursor-pointer">
+                                        <div className="flex items-center gap-3"><Icon name="receipt" className="text-slate-300"/><p className="text-sm font-bold text-slate-700">{m}</p></div>
+                                        <p className="text-[10px] font-black text-[#0055DD] uppercase tracking-widest">Descargar PDF</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Opciones de cuenta */}
+                        <section className="space-y-2 pt-6">
+                             <button className="w-full bg-white p-5 border border-slate-100 rounded-xl text-left text-sm font-bold text-slate-700 flex justify-between items-center active:bg-slate-50"><div className="flex items-center gap-4"><Icon name="key" className="text-slate-300"/> Resetear Clave</div> <Icon name="chevron-right" size={16}/></button>
+                             <button className="w-full bg-red-50 p-5 border border-red-100 rounded-xl text-left text-sm font-black text-red-600 flex justify-between items-center active:opacity-60"><div className="flex items-center gap-4"><Icon name="user-x" /> Cancelar mi cuenta</div></button>
+                        </section>
+                    </div>
+                </div>
+            );
+
+            // --- VISTAS: MOVIMIENTOS Y ÉXITO (MANTENIDAS) ---
+            const MovimientosView = () => (
+                <div className="flex flex-col h-full bg-white animate-in">
+                    <header className="p-5 pt-12 flex items-center gap-4 border-b border-slate-50">
+                        <button onClick={() => setView('inicio')} className="p-2 bg-slate-50 rounded-full text-slate-400 active:scale-90 transition-all"><Icon name="arrow-left" /></button>
+                        <h2 className="text-lg font-bold text-slate-800">Tu actividad</h2>
+                    </header>
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-5 space-y-6">
+                        <div className="relative"><Icon name="search" className="absolute left-3 top-3.5 text-slate-300" size={16}/><input type="text" placeholder="Busca una operación" className="w-full bg-slate-50 p-3.5 pl-10 rounded-xl text-sm outline-none border border-slate-100 focus:border-[#0055DD]"/></div>
+                        <div className="space-y-6">
+                            {[
+                                { t: "Pago de Alquiler", s: "- $ 450.000", desc: "Caseros 1230 - Abril", icon: "key", color: "text-red-500" },
+                                { t: "Intereses Blindado", s: "+ $ 1.240", desc: "Rendimiento diario", icon: "trending-up", color: "text-emerald-500" },
+                                { t: "Ingreso de dinero", s: "+ $ 150.000", desc: "Desde Alias propio", icon: "plus", color: "text-emerald-500" }
+                            ].map((m, i) => (
+                                <div key={i} className="flex justify-between items-center active:opacity-60 transition-opacity cursor-pointer">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 bg-slate-50 rounded flex items-center justify-center text-slate-400 border border-slate-100"><Icon name={m.icon} size={22}/></div>
+                                        <div><p className="text-sm font-bold text-slate-800 leading-none mb-1">{m.t}</p><p className="text-[10px] text-slate-400 uppercase font-medium">{m.desc}</p></div>
+                                    </div>
+                                    <p className={`text-sm font-black ${m.color}`}>{m.s}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const ExitoPagoView = () => (
+                <div className="flex flex-col h-full success-bg text-white items-center justify-center p-10 text-center animate-in">
+                    <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center mb-8 shadow-2xl animate-pop">
+                        <Icon name="star" size={56} className="text-[#10B981] fill-[#10B981]" />
+                    </div>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">¡ALQUILER PAGADO!</h1>
+                    <p className="text-emerald-50 font-medium mb-12 leading-relaxed">Has usado tu blindaje de Abril con éxito. <br/> Ganaste <strong>+500 Millas</strong> de reputación.</p>
+                    <button onClick={() => setView('inicio')} className="w-full bg-white text-emerald-700 py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl">Volver al Inicio</button>
+                </div>
+            );
+
+            return (
+                <div className="mobile-shell flex flex-col">
+                    {/* Notch Superior */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black/10 rounded-b-3xl z-[150] flex items-center justify-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white/40"></div>
+                        <div className="w-10 h-1 bg-white/40 rounded-full"></div>
+                    </div>
+
+                    {view === 'inicio' && <InicioView />}
+                    {view === 'movimientos' && <MovimientosView />}
+                    {view === 'administracion' && <AdministracionView />}
+                    {view === 'tickets' && <TicketsView />}
+                    {view === 'nuevo_ticket' && <NuevoTicketView />}
+                    {view === 'deposito_blindado' && <DepositWizard />}
+                    {view === 'exito_pago' && <ExitoPagoView />}
+
+                    {/* MARCO INFERIOR (TAB BAR) */}
+                    {['inicio', 'movimientos', 'tickets', 'administracion'].includes(view) && (
+                        <nav className="absolute bottom-0 w-full bg-white border-t border-slate-100 h-20 flex justify-around items-center px-2 z-[90] shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                            <div onClick={() => setView('inicio')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'inicio' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="home" size={24} strokeWidth={view === 'inicio' ? 3 : 2} />
+                                <span className="text-[10px] font-bold">Inicio</span>
+                            </div>
+                            <div onClick={() => setView('movimientos')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'movimientos' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="list" size={24} />
+                                <span className="text-[10px] font-bold">Actividad</span>
+                            </div>
+                            <div className="flex-1 flex justify-center">
+                                <div onClick={() => setView('deposito_blindado')} className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-50 -translate-y-4 active:scale-90 transition-transform">
+                                    <Icon name="shield-check" size={30} className="text-[#0055DD]" strokeWidth={2.5} />
+                                </div>
+                            </div>
+                            <div onClick={() => setView('tickets')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'tickets' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="wrench" size={24} />
+                                <span className="text-[10px] font-bold">Gestión</span>
+                            </div>
+                            <div onClick={() => setView('administracion')} className={`flex flex-col items-center gap-1 flex-1 cursor-pointer transition-all ${view === 'administracion' ? 'text-[#0055DD]' : 'text-slate-300'}`}>
+                                <Icon name="layout-grid" size={24} />
+                                <span className="text-[10px] font-bold">Admin</span>
+                            </div>
+                        </nav>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DptoLibreApp />);
+    </script>
+</body>
+</html>
